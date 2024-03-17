@@ -2,7 +2,7 @@ from setuptools import setup
 
 VERSION = "0.1.5"
 
-requirements = open("requirements.txt").readlines()
+requirements = open("requirements.txt", encoding="utf-8").readlines()
 
 if __name__ == "__main__":
     setup(
