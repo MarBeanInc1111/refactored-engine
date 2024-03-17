@@ -103,13 +103,13 @@ def get_email():
     return str(uuid.uuid4())
 
 
-# TODO can we make BaseModel.id a CharField with default=uuid4?
 def username_to_uuid(username):
     """
-    Creates a consistent UUID from a username
-    :param username:
-    :return:
+    Creates a consistent UUID from a username using SHA-256 hashing algorithm.
+    :param username: The username to be hashed.
+    :return: A UUID object created from the hashed username.
     """
-    sha1 = hashlib.sha1(username.encode()).hexdigest()
-    uuid_str = "{}-{}-{}-{}-{}".format(sha1[:8], sha1[8:12], sha1[12:16], sha1[16:20], sha1[20:32])
-    return str(uuid.UUID(uuid_str))
+    sha256 = hashlib.sha256(username.encode()).hexdigest()
+    # Format the hash to fit UUID format (8-4-4-4-12)
+    uuid_str = "{}-{}-{}-{}-{}".format(sha256[:8], sha256[8:12], sha256[12:16], sha256[16:20], sha256[20:32])
+    return uuid.UUID(uuid_str)
