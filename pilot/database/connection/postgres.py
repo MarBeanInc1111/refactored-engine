@@ -18,6 +18,7 @@ def create_postgres_database():
     conn.autocommit = True
     cursor = conn.cursor()
     safe_db_name = quote_ident(DB_NAME, conn)
-    cursor.execute(f"CREATE DATABASE {safe_db_name}")
+    # Parameterized query to create database
+    cursor.execute("CREATE DATABASE %s", (safe_db_name,))
     cursor.close()
     conn.close()
