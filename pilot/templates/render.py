@@ -1,15 +1,15 @@
-from __future__ import annotations  # Allows us to use class names in type hints
+from __future__ import annotations
 
-import os  # For file system operations
-import os.path  # For file system operations
-from typing import Any, Callable  # For type hinting
+import os
+import os.path
+from typing import Any, Callable
 
-import jinja2  # For rendering templates
+import jinja2
 
 
 class Renderer:
     """
-    Render a Jinja template.
+    Render Jinja templates using a given context.
 
     This class sets up a Jinja renderer and provides methods to render one or
     more templates using a provided context. The rendered templates are returned
@@ -62,14 +62,16 @@ class Renderer:
         tpl_object = self.jinja_env.get_template(template)
         return tpl_object.render(context)
 
-    def render_tree(self, root: str, context: Any, filter: Callable = None) -> dict[str, str]:
+    def render_tree(
+        self, root: str, context: Any, filter_func: Callable[[str], str | None] | None = None
+    ) -> dict[str, str]:
         """
         Render a tree of templates using the provided context.
 
         Args:
             root (str): The root of the tree (relative to the template directory).
             context (Any): The context used for rendering the templates.
-            filter (Callable, optional): A function to filter the files to render.
+            filter_func (Callable[[str]], str | None): A function to filter the files to render.
                 If provided, it should take a single string argument (the file
                 path relative to the tree root) and return a string (the
                 output file path) or None (to skip the file).
@@ -78,8 +80,7 @@ class Renderer:
             dict[str, str]: A dictionary containing the rendered templates,
                 with file paths as keys and the rendered content as values.
         """
-        retval = {}
-
+        rendered_templates = {}
         full_root = os.path.join(self.template_dir, root)
 
         for path, subdirs, files in os.walk(full_root):
@@ -88,12 +89,10 @@ class Renderer:
                 tpl_location = os.path.relpath(file_path, self.template_dir)  # Template location relative to template_dir
                 output_location = os.path.relpath(file_path, full_root)  # Template location relative to tree root
 
-                if filter:
-                    output_location = filter(output_location)
-                    if not output_location:
-                        continue
+                if filter_func and filter_func(output_location) is None:
+                    continue
 
                 contents = self.render_template(tpl_location, context)
-                retval[output_location] = contents
+                rendered_templates[output_location] = contents
 
-        return retval
+        return rendered_templates
