@@ -1,3 +1,11 @@
-Based on the following conversation, write a summary:
+def calculate_average(numbers: List[float]) -> float:
+    """
+    Calculate the average of a list of numbers.
 
-``` {{conversation}} ```
+    :param numbers: A list of floating-point numbers.
+    :return: The average value as a floating-point number.
+    """
+    total: float = sum(numbers)  # Sum all the numbers in the list.
+    count: int = len(numbers)    # Count the number of items in the list.
+    average: float = total / count  # Calculate the average.
+    return average
