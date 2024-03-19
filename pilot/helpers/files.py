@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-from typing import Optional, Union
+from typing import Optional, Union, List, Dict
 
 from utils.style import color_green
 from utils.ignore import IgnoreMatcher
@@ -19,10 +19,8 @@ def update_file(path: str, new_content: Union[str, bytes], project: Optional[obj
     If the 'project' parameter is not None, the function prints a message indicating that the file has been updated,
     but only if 'skip_steps' is False and 'check_ipc()' returns True.
     """
-    # Create the necessary intermediate directories if they don't already exist.
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    # Determine the file mode and encoding based on the type of 'new_content'.
     if isinstance(new_content, str):
         file_mode = "w"
         encoding = "utf-8"
@@ -30,16 +28,13 @@ def update_file(path: str, new_content: Union[str, bytes], project: Optional[obj
         file_mode = "wb"
         encoding = None
 
-    # Open the file in write mode and write the new content to it.
     with open(path, file_mode, encoding=encoding) as file:
         file.write(new_content)
 
-        # If 'project' is not None, print a message indicating that the file has been updated,
-        # but only if 'skip_steps' is False and 'check_ipc()' returns True.
         if project is not None and not project.skip_steps and project.check_ipc():
             print(color_green(f"Updated file {path}"))
 
-def get_file_contents(path: str, project_root_path: str) -> dict[str, Union[str, bytes]]:
+def get_file_contents(path: str, project_root_path: str) -> Dict[str, Union[str, bytes]]:
     """
     Get the content and metadata of a file at the given path.
 
@@ -54,42 +49,40 @@ def get_file_contents(path: str, project_root_path: str) -> dict[str, Union[str,
 
     This function reads the file as a text file using UTF-8 encoding. If that fails, it reads the file as a binary file.
     """
-    # Normalize the path to avoid issues with different path separators.
-    full_path = os.path.normpath(path)
+    full_path = Path(path).resolve().absolute()
 
     try:
-        # Assume the file is a text file and try to read it using UTF-8 encoding.
-        with open(full_path, "r", encoding="utf-8") as file:
-            file_content = file.read()
+        if full_path.is_file():
+            with open(full_path, "r", encoding="utf-8") as file:
+                file_content = file.read()
+        else:
+            raise ValueError(f"Path is not a file: {path}")
+
     except UnicodeDecodeError:
-        # If that fails, treat the file as a binary file.
         with open(full_path, "rb") as file:
             file_content = file.read()
+
     except (NotADirectoryError, FileNotFoundError):
-        # Raise a ValueError if the path is not a directory or the file is not found.
         raise ValueError(f"Path is not a directory or file not found: {path}")
+
     except Exception as e:
-        # Raise a ValueError with the exception message if any other exception occurs.
         raise ValueError(f"Exception in get_file_contents: {e}")
 
-    # Get the file name, relative path, and full path.
-    file_name = os.path.basename(path)
-    relative_path = str(Path(path).parent.relative_to(project_root_path))
+    file_name = full_path.name
+    relative_path = str(full_path.relative_to(project_root_path))
 
-    # If the relative path is '.', set it to an empty string.
     if relative_path == '.':
         relative_path = ''
 
-    # Return a dictionary containing the file content and metadata.
     return {
         "name": file_name,
         "path": relative_path,
         "content": file_content,
-        "full_path": full_path,
+        "full_path": str(full_path),
         "lines_of_code": len(file_content.splitlines()),
     }
 
-def get_directory_contents(directory: str, ignore: Optional[list[str]] = None) -> list[dict[str, Union[str, bytes]]]:
+def get_directory_contents(directory: str, ignore: Optional[List[str]] = None) -> List[Dict[str, Union[str, bytes]]]:
     """
     Get the content of all files in the given directory.
 
@@ -102,25 +95,40 @@ def get_directory_contents(directory: str, ignore: Optional[list[str]] = None) -
     """
     return_array = []
 
-    # Create an IgnoreMatcher object to determine which files and directories to ignore.
     matcher = IgnoreMatcher(ignore, root_path=directory)
 
-    # Iterate over all files and directories in the given directory.
     for dpath, dirs, files in os.walk(directory):
-        # In-place update of dirs so that os.walk() doesn't traverse them.
         dirs[:] = [d for d in dirs if not matcher.ignore(os.path.join(dpath, d))]
 
-        # Iterate over all files in the current directory.
         for file in files:
             full_path = os.path.join(dpath, file)
 
-            # Ignore the file if it matches the ignore pattern.
             if matcher.ignore(full_path):
                 continue
 
-            # Get the content and metadata of the file and add it to the return array.
             return_array.append(get_file_contents(full_path, directory))
 
     return return_array
 
-def clear_directory(directory: str, ignore: Optional[list
+def clear_directory(directory: str, ignore: Optional[List[str]] = None):
+    """
+    Clear the content of a directory by removing all files and
+    subdirectories.
+
+    :param directory: The full path to the directory.
+    :param ignore: An optional list of files or folders to ignore. Default is None.
+    """
+    matcher = IgnoreMatcher(ignore, root_path=directory)
+
+    for dpath, dirs, files in os.walk(directory, topdown=False):
+        dirs[:] = [d for d in dirs if not matcher.ignore(os.path.join(dpath, d))]
+
+        for file in files:
+            full_path = os.path.join(dpath, file)
+
+            if matcher.ignore(full_path):
+                continue
+
+            if os.path.isfile(full_path):
+                os.remove(full_path)
+            elif os.path.is
