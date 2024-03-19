@@ -24,6 +24,8 @@ class IgnoreMatcher:
         if ignore_paths is None:
             ignore_paths = []
 
+        # The list of ignore paths is a combination of the provided paths and the
+        # default ignore paths from the `const.common` module
         self.ignore_paths = ignore_paths + IGNORE_PATHS
         self.ignore_binaries = ignore_binaries
         self.ignore_large_files = ignore_large_files
@@ -44,12 +46,15 @@ class IgnoreMatcher:
         if self.root_path and not path.startswith(self.root_path):
             path = os.path.join(self.root_path, path)
 
+        # Check if the path is in the ignore list
         if self.is_in_ignore_list(path):
             return True
 
+        # Check if the file is larger than the threshold
         if self.ignore_large_files and self.is_large_file(path):
             return True
 
+        # Check if the file is binary
         if self.ignore_binaries and self.is_binary(path):
             return True
 
@@ -78,12 +83,17 @@ class IgnoreMatcher:
         :param path: FULL path to the file to check.
         :return: True if the file is larger than the threshold, False otherwise.
         """
+        # Check if the path is a valid file
         if not os.path.isfile(path):
             return False
 
         try:
-            return bool(os.path.getsize(path) > IGNORE_SIZE_THRESHOLD)
+            # Check if the file size is larger than the threshold
+            file_size = os.path.getsize(path)
+            return file_size > IGNORE_SIZE_THRESHOLD
         except:  # noqa
+            # If there is an error while getting the file size, return True
+            # to ignore the file
             return True
 
     def is_binary(self, path: str) -> bool:
@@ -96,13 +106,17 @@ class IgnoreMatcher:
         :param path: FULL path to the file to check.
         :return: True if the file should be ignored, False otherwise.
         """
+        # Check if the path is a valid file
         if not os.path.isfile(path):
             return False
 
         try:
-            open(path, "r", encoding="utf-8").read(128*1024)
+            # Open the file and try to read it as a text file
+            with open(path, "r", encoding="utf-8") as file:
+                file.read(128*1024)
+            # If the file can be read as a text file, return False
             return False
         except:  # noqa
-            # If we can't open the file for any reason (eg. PermissionError), it's
-            # best to ignore it anyway
+            # If there is an error while opening or reading the file,
+            # return True to ignore the file
             return True
