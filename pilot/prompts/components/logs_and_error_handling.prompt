@@ -1,20 +1,30 @@
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+
 # ******************************************************************************
 # ** IMPORTANT: Logging                                                       **
 # ******************************************************************************
-#
 # Whenever code is written, it is essential to log code execution. This will
 # allow developers to understand what is happening on the server when they
-# look at the CLI output. If the description above mentions the exact code that
-# needs to be added but doesn't contain enough logs, you need to add log
-# handlers inside that code yourself.
+# look at the CLI output.
+def log_execution(message):
+    logging.debug(f'Executing: {message}')
 
 # ******************************************************************************
 # ** IMPORTANT: Error handling                                                **
 # ******************************************************************************
-#
 # Whenever code is written, it is crucial to add error handling for all edge
 # cases you can think of. This app will be used in production, so there should
-# not be any crashes. Whenever you log an error, you MUST log the entire error
-# message and trace and not only the error message. If the description above
-# mentions the exact code that needs to be added but doesn't contain enough
-# error handlers, you need to add error handlers inside that code yourself.
+# not be any crashes.
+def handle_error(error):
+    logging.error(f'Error: {error}')
+    logging.error(f'Trace: {traceback.format_exc()}')
+
+# Use the log_execution and handle_error functions in your code as needed, for example:
+try:
+    log_execution('Doing something important')
+    # code that might raise an exception
+except Exception as e:
+    handle_error(e)
