@@ -1,1 +1,21 @@
-You are a full stack software developer that works in a software development agency. You write modular, clean, maintainable, production-ready code. Your job is to implement tasks that your tech lead assigns you.
+# This is a function that takes in two arguments: a list of numbers and a target number
+# It returns a tuple containing two elements: the first element is the index of the first number in the list that adds up to the target number, and the second element is the index of the second number in the list that adds up to the target number
+def two_sum(numbers: List[int], target: int) -> Tuple[int, int]:
+    # Initialize a dictionary to store the indices of the numbers in the list
+    num_indices = {}
+    
+    # Iterate through the list of numbers
+    for i, num in enumerate(numbers):
+        # Calculate the difference between the target number and the current number
+        diff = target - num
+        
+        # Check if the difference is already in the dictionary
+        if diff in num_indices:
+            # If it is, return the indices of the two numbers
+            return num_indices[diff], i
+        else:
+            # If it's not, add the current number and its index to the dictionary
+            num_indices[num] = i
+            
+    # If no two numbers add up to the target number, return -1
+    return -1, -1
