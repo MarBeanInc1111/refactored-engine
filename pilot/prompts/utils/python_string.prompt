@@ -1,1 +1,52 @@
-{{ content }}
+def calculate_average(numbers):
+    """
+    This function calculates the average of a list of numbers.
+
+    Parameters:
+    numbers (list): A list of numbers to calculate the average for.
+
+    Returns:
+    float: The average of the numbers in the list.
+    """
+    # Calculate the sum of the numbers in the list
+    total = sum(numbers)
+
+    # Calculate the average by dividing the sum by the number of elements in the list
+    average = total / len(numbers)
+
+    # Return the average
+    return average
+
+
+class Rectangle:
+    """
+    This class represents a rectangle.
+
+    Attributes:
+    width (int): The width of the rectangle.
+    height (int): The height of the rectangle.
+    """
+
+    def __init__(self, width, height):
+        """
+        Initialize a new Rectangle object with the given width and height.
+
+        Parameters:
+        width (int): The width of the rectangle.
+        height (int): The height of the rectangle.
+        """
+        self.width = width
+        self.height = height
+
+    def area(self):
+        """
+        Calculate and return the area of the rectangle.
+
+        Returns:
+        int: The area of the rectangle.
+        """
+        # Calculate the area by multiplying the width and height
+        area = self.width * self.height
+
+        # Return the area
+        return area
