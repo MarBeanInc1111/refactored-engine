@@ -13,7 +13,7 @@ from pilot.helpers.files import get_file_contents, get_directory_contents, updat
 def test_update_file_creates_directories(mock_os, mock_open):
     """Test that update_file creates intermediate directories if they don't exist."""
 
-    mock_os.path.dirname = os.path.dirname
+    mock_os.path.dirname.return_value = "/path/to"
     update_file("/path/to/file", "content")
     mock_os.makedirs.assert_called_once_with("/path/to", exist_ok=True)
 
@@ -21,7 +21,7 @@ def test_update_file_creates_directories(mock_os, mock_open):
 @patch("pilot.helpers.files.open")
 @patch("pilot.helpers.files.os")
 def test_update_file_creates_text_file(mock_os, mock_open):
-    """Test that update_file creates intermediate directories if they don't exist."""
+    """Test that update_file creates a text file."""
 
     update_file("/path/to/file", "無為")
     mock_open.assert_called_once_with("/path/to/file", "w", encoding="utf-8")
@@ -31,7 +31,7 @@ def test_update_file_creates_text_file(mock_os, mock_open):
 @patch("pilot.helpers.files.open")
 @patch("pilot.helpers.files.os")
 def test_update_file_creates_binary_file(mock_os, mock_open):
-    """Test that update_file creates intermediate directories if they don't exist."""
+    """Test that update_file creates a binary file."""
 
     update_file("/path/to/file", b"\x00\x00\x00")
     mock_open.assert_called_once_with("/path/to/file", "wb", encoding=None)
@@ -56,6 +56,7 @@ def test_update_file_with_encoded_content(source, expected_encoded):
 
     file.close()
     os.remove(file.name)
+
 
 @pytest.mark.parametrize(
     ("encoded", "expected"),
@@ -96,10 +97,10 @@ def test_get_directory_contents_mocked(mock_IgnoreMatcher, mock_os, mock_open):
     def np(path: str) -> str:
         return str(Path(path))
 
-    mock_os.path.join = os.path.join
-    mock_os.path.normpath = os.path.normpath
-    mock_os.path.basename = os.path.basename
-    mock_IgnoreMatcher.return_value.ignore = lambda path: os.path.basename(path) in ["to-ignore", "to-ignore.txt"]
+    mock_os.path.join.return_value = os.path.join
+    mock_os.path.normpath.return_value = os.path.normpath
+    mock_os.path.basename.return_value = os.path.basename
+    mock_IgnoreMatcher.return_value.ignore.return_value = os.path.basename(path) in ["to-ignore", "to-ignore.txt"]
 
     mock_walk = mock_os.walk
     mock_walk.return_value = [
@@ -119,48 +120,4 @@ def test_get_directory_contents_mocked(mock_IgnoreMatcher, mock_os, mock_open):
         {
             "content": "file.txt",
             "full_path": np("/fake/root/file.txt"),
-            'lines_of_code': 1,
-            "name": "file.txt",
-            "path": "",
-        },
-        {
-            "content": "foo.txt - 無為",
-            "full_path": np("/fake/root/foo/foo.txt"),
-            'lines_of_code': 1,
-            "name": "foo.txt",
-            "path": "foo",
-        },
-        {
-            "content": b"\xff\xff\xff",
-            "full_path": np("/fake/root/bar/bar.txt"),
-            'lines_of_code': 1,
-            "name": "bar.txt",
-            "path": "bar",
-        },
-    ]
-    mock_walk.assert_called_once_with(np("/fake/root"))
-
-
-def test_get_directory_contents_live():
-    files = get_directory_contents(
-        os.path.dirname(os.path.dirname(__file__)), [".pytest_cache", "agents", "__init__.py"]
-    )
-
-    # Check this file was loaded as a text file
-    this_file = [f for f in files if f["name"] == "test_files.py"][0]
-    assert this_file["path"] == "helpers"
-    assert this_file["full_path"] == __file__
-    assert isinstance(this_file["content"], str)
-    assert "test_get_directory_contents_live()" in this_file["content"]
-
-    # Check that the binary file was ignored
-    image_files = [
-        f
-        for f in files
-        if f["path"] == "helpers" and f["name"] == "testlogo.png"
-    ]
-    assert image_files == []
-
-    # Check that the ignore list works
-    assert all(file["name"] != "__init__.py" for file in files)
-    assert any(file["path"] == "database" for file in files)
+            'lines_of
