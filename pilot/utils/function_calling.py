@@ -1,137 +1,90 @@
-import json
-import re
-from typing import Union, TypeVar, List, Dict, Literal, Optional, TypedDict, Callable
+import json  # Importing json module for handling JSON data
+import re  # Importing re module for regular expressions
+from typing import Union, TypeVar, List, Dict, Literal, Optional, TypedDict, Callable  # Importing various types from typing module
 
-JsonTypeBase = Union[str, int, float, bool, None, List["JsonType"], Dict[str, "JsonType"]]
-JsonType = TypeVar("JsonType", bound=JsonTypeBase)
-
+JsonTypeBase = Union[str, int, float, bool, None, List["JsonType"], Dict[str, "JsonType"]]  # Define a type for JSON data
+JsonType = TypeVar("JsonType", bound=JsonTypeBase)  # Define a type variable for JSON data
 
 class FunctionParameters(TypedDict):
-    """Function parameters"""
-
-    type: Literal["object"]
-    properties: dict[str, JsonType]
-    required: Optional[list[str]]
-
+    """TypedDict class for function parameters"""
+    type: Literal["object"]  # Literal type for the 'type' key, set to 'object'
+    properties: dict[str, JsonType]  # Dictionary type for the 'properties' key
+    required: Optional[list[str]]  # Optional list type for the 'required' key
 
 class FunctionType(TypedDict):
-    """Function type"""
-
-    name: str
-    description: Optional[str]
-    parameters: FunctionParameters
-
+    """TypedDict class for function type"""
+    name: str  # String type for the 'name' key
+    description: Optional[str]  # Optional string type for the 'description' key
+    parameters: FunctionParameters  # FunctionParameters type for the 'parameters' key
 
 class FunctionCall(TypedDict):
-    """Function call"""
-
-    name: str
-    parameters: str
-
+    """TypedDict class for function call"""
+    name: str  # String type for the 'name' key
+    parameters: str  # String type for the 'parameters' key
 
 class FunctionCallSet(TypedDict):
-    definitions: list[FunctionType]
-    functions: dict[str, Callable]
-
+    """TypedDict class for function call set"""
+    definitions: list[FunctionType]  # List type of FunctionType for the 'definitions' key
+    functions: dict[str, Callable]  # Dictionary type for the 'functions' key
 
 def add_function_calls_to_request(gpt_data, function_calls: Union[FunctionCallSet, None]):
+    """Function to add function calls to the request data"""
+    # Check if function_calls is None and return None if true
     if function_calls is None:
         return None
 
-    model: str = gpt_data['model']
-    is_instruct = 'llama' in model or 'anthropic' in model
+    model: str = gpt_data['model']  # Assign the 'model' value from gpt_data to a variable 'model'
+    is_instruct = 'llama' in model or 'anthropic' in model  # Define 'is_instruct' based on the value of 'model'
 
-    gpt_data['functions'] = function_calls['definitions']
+    gpt_data['functions'] = function_calls['definitions']  # Assign the 'definitions' value from function_calls to 'functions' key in gpt_data
 
-    prompter = JsonPrompter(is_instruct)
+    prompter = JsonPrompter(is_instruct)  # Create an instance of JsonPrompter class with 'is_instruct' as argument
 
     if len(function_calls['definitions']) > 1:
-        function_call = None
+        function_call = None  # Set 'function_call' to None if the length of 'definitions' is greater than 1
     else:
-        function_call = function_calls['definitions'][0]['name']
+        function_call = function_calls['definitions'][0]['name']  # Set 'function_call' to the 'name' value of the first item in 'definitions'
 
     function_call_message = {
-        'role': 'user',
-        'content': prompter.prompt('', function_calls['definitions'], function_call)
-    }
-    gpt_data['messages'].append(function_call_message)
+        'role': 'user',  # Define the 'role' key with value 'user'
+        'content': prompter.prompt('', function_calls['definitions'], function_call)  # Define the 'content' key with the result of prompter.prompt()
+    }  # Create a dictionary with 'role' and 'content' keys
 
-    return function_call_message
+    gpt_data['messages'].append(function_call_message)  # Append the created dictionary to the 'messages' list in gpt_data
 
+    return function_call_message  # Return the created dictionary
 
 def parse_agent_response(response, function_calls: Union[FunctionCallSet, None]):
-    """
-    Post-processes the response from the agent.
-
-    Args:
-        response: The response from the agent.
-        function_calls: Optional function calls associated with the response.
-
-    Returns: The post-processed response.
-    """
+    """Function to parse the agent's response"""
     if function_calls:
-        text = response['text']
-        return json.loads(text)
+        text = response['text']  # Assign the 'text' value from response to a variable 'text'
+        return json.loads(text)  # Return the result of json.loads(text)
 
-    return response['text']
-
+    return response['text']  # Return the 'text' value from response
 
 class JsonPrompter:
-    """
-    Adapted from local_llm_function_calling
-    """
+    """JsonPrompter class for generating the prompt"""
     def __init__(self, is_instruct: bool = False):
-        self.is_instruct = is_instruct
+        """Initialize the JsonPrompter class"""
+        self.is_instruct = is_instruct  # Assign the 'is_instruct' argument to the 'is_instruct' attribute
 
-    def function_descriptions(
-        self, functions: list[FunctionType], function_to_call: str
+    def function_descriptions(self, functions: list[FunctionType], function_to_call: str
     ) -> list[str]:
-        """Get the descriptions of the functions
-
-        Args:
-            functions (list[FunctionType]): The functions to get the descriptions of
-            function_to_call (str): The function to call
-
-        Returns:
-            list[str]: The descriptions of the functions
-                (empty if the function doesn't exist or has no description)
-        """
+        """Function to get the descriptions of the functions"""
         return [
             f'# {function["name"]}: {function["description"]}'
             for function in functions
             if function["name"] == function_to_call and "description" in function
         ]
 
-    def function_parameters(
-        self, functions: list[FunctionType], function_to_call: str
+    def function_parameters(self, functions: list[FunctionType], function_to_call: str
     ) -> str:
-        """Get the parameters of the function
+        """Function to get the parameters of the function"""
+        return next(json.dumps(function["parameters"]["properties"], indent=4) for function in functions if function["name"] == function_to_call)
 
-        Args:
-            functions (list[FunctionType]): The functions to get the parameters of
-            function_to_call (str): The function to call
-
-        Returns:
-            str: The parameters of the function as a JSON schema
-        """
-        return next(
-            json.dumps(function["parameters"]["properties"], indent=4)
-            for function in functions
-            if function["name"] == function_to_call
-        )
-
-    def function_data(
-        self, functions: list[FunctionType], function_to_call: str
+    def function_data(self, functions: list[FunctionType], function_to_call: str
     ) -> str:
-        """Get the data for the function
-
-        Args:
-            functions (list[FunctionType]): The functions to get the data for
-            function_to_call (str): The function to call
-
-        Returns:
-            str: The data necessary to generate the arguments for the function
-        """
+        """Function to get the data for the function"""
         return "\n".join(
             [
                 "Here is the schema for the expected JSON object:",
@@ -142,62 +95,12 @@ class JsonPrompter:
         )
 
     def function_summary(self, function: FunctionType) -> str:
-        """Get a summary of a function
-
-        Args:
-            function (FunctionType): The function to get the summary of
-
-        Returns:
-            str: The summary of the function, as a bullet point
-        """
-        return f"- {function['name']}" + (
-            f" - {function['description']}" if "description" in function else ""
-        )
+        """Function to get a summary of a function"""
+        return f"- {function['name']}" + (f" - {function['description']}" if "description" in function else "")
 
     def functions_summary(self, functions: list[FunctionType]) -> str:
-        """Get a summary of the functions
+        """Function to get a summary of the functions"""
+        return "Available functions:\n" + "\n".join(self.function_summary(function) for function in functions)
 
-        Args:
-            functions (list[FunctionType]): The functions to get the summary of
-
-        Returns:
-            str: The summary of the functions, as a bulleted list
-        """
-        return "Available functions:\n" + "\n".join(
-            self.function_summary(function) for function in functions
-        )
-
-    def prompt(
-        self,
-        prompt: str,
-        functions: list[FunctionType],
-        function_to_call: Union[str, None] = None,
-    ) -> str:
-        """Generate the llama prompt
-
-        Args:
-            prompt (str): The prompt to generate the response to
-            functions (list[FunctionType]): The functions to generate the response from
-            function_to_call (str | None): The function to call. Defaults to None.
-
-        Returns:
-            list[bytes | int]: The llama prompt, a function selection prompt if no
-                function is specified, or a function argument prompt if a function is
-                specified
-        """
-        system = (
-            "Help choose the appropriate function to call to answer the user's question."
-            if function_to_call is None
-            else "**IMPORTANT**"
-        ) + "\nYou must respond with ONLY the JSON object, with NO additional text or explanation."
-
-        data = (
-            self.function_data(functions, function_to_call)
-            if function_to_call
-            else self.functions_summary(functions)
-        )
-
-        if self.is_instruct:
-            return f"[INST] <<SYS>>\n{system}\n\n{data}\n<</SYS>>\n\n{prompt} [/INST]"
-        else:
-            return f"{system}\n\n{data}\n\n{prompt}"
+    def prompt(self, prompt: str, functions: list[FunctionType], function_to_call: Union[str, None] = None) -> str:
+        """Function to generate the llama
