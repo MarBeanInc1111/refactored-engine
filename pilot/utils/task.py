@@ -1,48 +1,14 @@
 import json
-from uuid import uuid4
+import uuid
+from typing import Any, Dict, List, Optional
 
 from utils.telemetry import telemetry
-from utils.exit import trace_code_event
-from const.telemetry import LOOP_THRESHOLD
-
 
 class Task:
     """
-    Task data structure to store information about the current task. The task data structure is sent to telemetry.
+    Task data structure to store information about the current task.
+    The task data structure is sent to telemetry.
     Currently used to trace big loops in the code.
-
-    >>> from utils.task import Task
-
-    To set up a new task:
-
-    >>> task = Task()
-
-    To set a value:
-
-    >>> task.set('task_description', 'test')
-
-    To increment a value:
-
-    >>> task.inc('steps')
-
-    To start a new task:
-
-    >>> task.start_new_task('test', 1)
-
-    When debugging recursion happens inside a task (see pilot/helpers/Debugger.py) we add a debugging task to the
-    task data structure. To add a debugging task:
-
-    >>> task.add_debugging_task(1, {'command': 'test'}, 'This is not working', 'Command is not working')
-
-    To clear the task:
-
-    >>> task.clear()
-
-    To send the task:
-
-    >>> task.send()
-
-    Note: the task will be sent automatically if the number of steps exceeds the threshold
     """
 
     def __init__(self):
@@ -56,27 +22,85 @@ class Task:
         self.data = self.initial_data.copy()
         self.ping_extension = True
 
-    def set(self, key: str, value: any):
+    def set(self, key: str, value: Any) -> None:
         """
         Set a value in the task data
 
         :param key: key to set
         :param value: value to set
         """
+        if not isinstance(key, str) or not isinstance(value, Any):
+            raise TypeError("Key and value must be of type str and Any respectively")
         self.data[key] = value
 
-    def inc(self, key: str, value: int = 1):
+    @property
+    def steps(self) -> int:
+        """
+        Get the current number of steps
+
+        :return: int
+        """
+        return self.data['steps']
+
+    @steps.setter
+    def steps(self, value: int) -> None:
+        """
+        Set the number of steps
+
+        :param value: int
+        """
+        if not isinstance(value, int):
+            raise TypeError("Value must be of type int")
+        self.data['steps'] = value
+
+    @steps.deleter
+    def steps(self) -> None:
+        """
+        Delete the number of steps
+        """
+        del self.data['steps']
+
+    @property
+    def iterations(self) -> int:
+        """
+        Get the current number of iterations
+
+        :return: int
+        """
+        return self.data['iterations']
+
+    @iterations.setter
+    def iterations(self, value: int) -> None:
+        """
+        Set the number of iterations
+
+        :param value: int
+        """
+        if not isinstance(value, int):
+            raise TypeError("Value must be of type int")
+        self.data['iterations'] = value
+
+    @iterations.deleter
+    def iterations(self) -> None:
+        """
+        Delete the number of iterations
+        """
+        del self.data['iterations']
+
+    def inc(self, key: str, value: int = 1) -> None:
         """
         Increment a value in the task data
 
         :param key: key to increment
         :param value: value to increment by
         """
+        if not isinstance(key, str) or not isinstance(value, int):
+            raise TypeError("Key and value must be of type str and int respectively")
         self.data[key] += value
         if key == 'iterations' and self.data[key] == LOOP_THRESHOLD + 1:
             self.send()
 
-    def start_new_task(self, task_description: str, i: int):
+    def start_new_task(self, task_description: str, i: int) -> None:
         """
         Start a new task
 
@@ -87,12 +111,15 @@ class Task:
         self.clear()
         self.set('task_description', task_description)
         self.set('task_number', i)
-        self.set('loopId', f"{uuid4()}")
+        self.set('loopId', f"{uuid.uuid4()}")
 
-    def add_debugging_task(self, recursion_layer: int = None,
-                           command: dict = None,
-                           user_input: str = None,
-                           issue_description: str = None):
+    def add_debugging_task(
+        self,
+        recursion_layer: Optional[int] = None,
+        command: Optional[Dict[str, Any]] = None,
+        user_input: Optional[str] = None,
+        issue_description: Optional[str] = None,
+    ) -> None:
         """
         Add a debugging task to the task data structure
 
@@ -108,7 +135,7 @@ class Task:
             'issue_description': issue_description,
         })
 
-    def add_user_input_to_debugging_task(self, user_input: str):
+    def add_user_input_to_debugging_task(self, user_input: str) -> None:
         """
         Add user input to the last debugging task
 
@@ -117,13 +144,13 @@ class Task:
         if self.data.get('debugging') and len(self.data['debugging']) > 0:
             self.data['debugging'][-1]['user_inputs'].append(user_input)
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Clear all the task data
         """
         self.data = self.initial_data.copy()
 
-    def send(self, name: str = 'loop-start', force: bool = False):
+    def send(self, name: str = 'loop-start', force: bool = False) -> None:
         """
         Send the task data to telemetry
 
@@ -137,13 +164,4 @@ class Task:
             if self.ping_extension and not force:
                 print(json.dumps({
                     'pathId': telemetry.telemetry_id,
-                    'data': full_data,
-                }), type='loopTrigger')
-                # TODO: see if we want to ping the extension multiple times
-                self.ping_extension = False
-
-    def exit(self):
-        """
-        Send the task data to telemetry and exit the process
-        """
-        self.send(name='loop-end')
+                    'data': full_data
