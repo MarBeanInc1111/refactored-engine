@@ -1,6 +1,25 @@
-I got the following error:
-```
-{{ error }}
-```
+def calculate_average(numbers):
+    total = sum(numbers)
+    avg = total / len(numbers)
+    return avg
 
-Specify what needs to be done to fix this error either in the code or what command (or commands) needs to be run to fix this error.
+numbers = [1, 2, 3, 4, 5]
+print(calculate_average(numbers))
+
+
+ZeroDivisionError: division by zero
+
+
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    total = sum(numbers)
+    avg = total / len(numbers)
+    return avg
+
+numbers = []
+result = calculate_average(numbers)
+if result is not None:
+    print(result)
+else:
+    print("Cannot calculate average for an empty list.")
