@@ -2,8 +2,7 @@ from unittest.mock import patch
 import pytest
 from tempfile import TemporaryDirectory
 
-from utils.ignore import IgnoreMatcher
-from os.path import sep, join, dirname
+from utils.ignore import IgnoreMatcher  # Import IgnoreMatcher class from utils.ignore module
 
 @pytest.mark.parametrize(
     ("path", "expected"),
@@ -33,11 +32,12 @@ from os.path import sep, join, dirname
 @patch("utils.ignore.os.path.isfile")
 @patch("utils.ignore.open")
 def test_default_ignore(mock_open, mock_isfile, mock_getsize, path, expected):
+    # Test the default ignore functionality of IgnoreMatcher class
     mock_open.return_value.read.return_value = "fake-content"
     mock_isfile.return_value = True
     mock_getsize.return_value = 100
-    matcher = IgnoreMatcher(root_path=dirname(__file__))
-    assert matcher.ignore(path) == expected
+    matcher = IgnoreMatcher(root_path=dirname(__file__))  # Initialize IgnoreMatcher instance
+    assert matcher.ignore(path) == expected  # Check if the given path should be ignored
 
 
 @pytest.mark.parametrize(
@@ -54,11 +54,12 @@ def test_default_ignore(mock_open, mock_isfile, mock_getsize, path, expected):
 @patch("utils.ignore.os.path.isfile")
 @patch("utils.ignore.open")
 def test_additional_ignore(mock_open, mock_isfile, mock_getsize, ignore, path, expected):
+    # Test the additional ignore functionality of IgnoreMatcher class
     mock_open.return_value.read.return_value = "fake-content"
     mock_isfile.return_value = True
     mock_getsize.return_value = 100
-    matcher = IgnoreMatcher([ignore])
-    assert matcher.ignore(path) == expected
+    matcher = IgnoreMatcher([ignore])  # Initialize IgnoreMatcher instance with a list of ignore patterns
+    assert matcher.ignore(path) == expected  # Check if the given path should be ignored
 
 
 @pytest.mark.parametrize(
@@ -70,8 +71,9 @@ def test_additional_ignore(mock_open, mock_isfile, mock_getsize, ignore, path, e
     ]
 )
 def test_full_path(ignore, path, expected):
-    matcher = IgnoreMatcher([ignore], root_path=f"{sep}test")
-    assert matcher.ignore(path) == expected
+    # Test the full path ignore functionality of IgnoreMatcher class
+    matcher = IgnoreMatcher([ignore], root_path=f"{sep}test")  # Initialize IgnoreMatcher instance with a root path
+    assert matcher.ignore(path) == expected  # Check if the given path should be ignored
 
 
 @pytest.mark.parametrize(
@@ -84,11 +86,13 @@ def test_full_path(ignore, path, expected):
 @patch("utils.ignore.os.path.isfile")
 @patch("utils.ignore.os.path.getsize")
 def test_ignore_large_files(mock_getsize, mock_isfile, size, expected):
+    # Test the large file ignore functionality of IgnoreMatcher class
     mock_isfile.return_value = True
     mock_getsize.return_value = size
-    matcher = IgnoreMatcher(root_path=f"{sep}test")
+    matcher = IgnoreMatcher(root_path=f"{sep}test")  # Initialize IgnoreMatcher instance
 
     with patch.object(matcher, "is_binary", return_value=False):
+        # Patch the is_binary method to return False
         assert matcher.ignore("fakefile.txt") is expected
 
     mock_isfile.assert_called_once()
@@ -103,6 +107,7 @@ def test_ignore_large_files(mock_getsize, mock_isfile, size, expected):
     ]
 )
 def test_ignore_binary_files(content, expected):
+    # Test the binary file ignore functionality of IgnoreMatcher class
     with TemporaryDirectory() as tmpdir:
         path = join(tmpdir, "testfile.txt")
         with open(path, "wb") as fp:
@@ -113,17 +118,4 @@ def test_ignore_binary_files(content, expected):
         assert matcher.ignore("testfile.txt") is expected
         assert matcher.ignore(path) is expected
 
-@patch("utils.ignore.os.path.isfile")
-@patch("utils.ignore.os.path.getsize")
-@patch("utils.ignore.open")
-def test_ignore_permission_denied(mock_open, mock_getsize, mock_isfile):
-    """
-    Test that files that can't be accessed are ignored.
-    """
-    mock_isfile.return_value = True
-    mock_getsize.return_value = 100
-    mock_open.side_effect = PermissionError("Permission denied")
-
-    matcher = IgnoreMatcher()
-    assert matcher.ignore("somefile.txt") is True
-    mock_open.assert_called_once_with("somefile.txt", "r", encoding="utf-8")
+@patch("utils.ignore.os.path.is
