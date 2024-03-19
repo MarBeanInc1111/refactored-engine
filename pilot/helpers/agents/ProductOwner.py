@@ -11,23 +11,33 @@ from const.llm import END_RESPONSE
 from const.messages import MAX_PROJECT_NAME_LENGTH
 from const.common import EXAMPLE_PROJECT_DESCRIPTION
 
-PROJECT_DESCRIPTION_STEP = 'project_description'
-USER_STORIES_STEP = 'user_stories'
-USER_TASKS_STEP = 'user_tasks'
-
-
+# Define the class for the product owner agent
 class ProductOwner(Agent):
+    # Initialize the product owner agent with the project object
     def __init__(self, project):
         super().__init__('product_owner', project)
 
     def get_project_description(self, spec_writer):
+        """
+        Get the project description from the user.
+
+        This method initializes the project with the given app ID, and if the app ID has already completed this step,
+        it loads the project description from the database and skips the user input. Otherwise, it asks the user
+        for the project name and type, initializes the project workspace, and saves the project description in
+        the database.
+
+        :param spec_writer: The spec writer object
+        """
+
+        # Log the project stage
         print(json.dumps({
             "project_stage": "project_description"
         }), type='info', category='agent:product-owner')
 
+        # Initialize the project app with the given app ID
         self.project.app = get_app(self.project.args['app_id'], error_if_not_found=False)
 
-        # If this app_id already did this step, just get all data from DB and don't ask user again
+        # If this app ID already did this step, just get all data from DB and don't ask user again
         if self.project.app is not None:
             step = get_progress_steps(self.project.args['app_id'], PROJECT_DESCRIPTION_STEP)
             if step and not should_execute_step(self.project.args['step'], PROJECT_DESCRIPTION_STEP):
@@ -42,29 +52,38 @@ class ProductOwner(Agent):
         self.project.current_step = PROJECT_DESCRIPTION_STEP
         is_example_project = False
 
+        # Ask the user for the app type if it's not provided
         if 'app_type' not in self.project.args:
             self.project.args['app_type'] = ask_for_app_type()
-        if 'name' not in self.project.args:
-            while True:
-                question = 'What is the project name?'
-                print(question, type='ipc')
-                print('start an example project', type='button')
-                project_name = ask_user(self.project, question)
-                if len(project_name) <= MAX_PROJECT_NAME_LENGTH:
-                    break
-                else:
-                    print(f"Hold your horses cowboy! Please, give project NAME with max {MAX_PROJECT_NAME_LENGTH} characters.")
 
-            if project_name.lower() == 'start an example project':
-                is_example_project = True
-                project_name = 'Example Project'
+        # Ask the user for the project name
+        while True:
+            question = 'What is the project name?'
+            print(question, type='ipc')
+            print('start an example project', type='button')
+            project_name = ask_user(self.project, question)
 
-            self.project.args['name'] = clean_filename(project_name)
+            # Check if the project name is within the maximum length
+            if len(project_name) <= MAX_PROJECT_NAME_LENGTH:
+                break
+            else:
+                print(f"Hold your horses cowboy! Please, give project NAME with max {MAX_PROJECT_NAME_LENGTH} characters.")
 
+        # Start an example project if the user selected it
+        if project_name.lower() == 'start an example project':
+            is_example_project = True
+            project_name = 'Example Project'
+
+        # Clean and set the project name
+        self.project.args['name'] = clean_filename(project_name)
+
+        # Save the project app in the database
         self.project.app = save_app(self.project)
 
+        # Set up the project workspace
         self.project.set_root_path(setup_workspace(self.project.args))
 
+        # Initialize the main prompt for the project
         if is_example_project:
             print(EXAMPLE_PROJECT_DESCRIPTION)
             self.project.main_prompt = EXAMPLE_PROJECT_DESCRIPTION
@@ -74,96 +93,6 @@ class ProductOwner(Agent):
                 "You can use it with other technologies, but you may run into problems "
                 "(eg. React might not work as expected).\n"
             ))
-            self.project.main_prompt = ask_for_main_app_definition(self.project)
 
-        print(json.dumps({'open_project': {
-            #'uri': 'file:///' + self.project.root_path.replace('\\', '/'),
-            'path': self.project.root_path,
-            'name': self.project.args['name'],
-        }}), type='info')
-
-        high_level_messages = []
-        high_level_summary = spec_writer.create_spec(self.project.main_prompt)
-
-        save_progress(self.project.args['app_id'], self.project.current_step, {
-            "prompt": self.project.main_prompt,
-            "messages": high_level_messages,
-            "summary": high_level_summary,
-            "app_data": generate_app_data(self.project.args)
-        })
-
-        self.project.project_description = high_level_summary
-        self.project.project_description_messages = high_level_messages
-        return
-        # PROJECT DESCRIPTION END
-
-    def get_user_stories(self):
-        if not self.project.args.get('advanced', False):
-            return
-
-        print(json.dumps({
-            "project_stage": "user_stories"
-        }), type='info')
-
-        self.project.current_step = USER_STORIES_STEP
-        self.convo_user_stories = AgentConvo(self)
-
-        # If this app_id already did this step, just get all data from DB and don't ask user again
-        step = get_progress_steps(self.project.args['app_id'], USER_STORIES_STEP)
-        if step and not should_execute_step(self.project.args['step'], USER_STORIES_STEP):
-            step_already_finished(self.project.args, step)
-            self.convo_user_stories.messages = step['messages']
-            self.project.user_stories = step['user_stories']
-            return
-
-        # USER STORIES
-        msg = "User Stories:\n"
-        print(color_green_bold(msg))
-        logger.info(msg)
-
-        self.project.user_stories = self.convo_user_stories.continuous_conversation('user_stories/specs.prompt', {
-            'name': self.project.args['name'],
-            'prompt': self.project.project_description,
-            'app_type': self.project.args['app_type'],
-            'END_RESPONSE': END_RESPONSE
-        })
-
-        logger.info(f"Final user stories: {self.project.user_stories}")
-
-        save_progress(self.project.args['app_id'], self.project.current_step, {
-            "messages": self.convo_user_stories.messages,
-            "user_stories": self.project.user_stories,
-            "app_data": generate_app_data(self.project.args)
-        })
-
-        return
-        # USER STORIES END
-
-    def get_user_tasks(self):
-        self.project.current_step = USER_TASKS_STEP
-        self.convo_user_stories.high_level_step = self.project.current_step
-
-        # If this app_id already did this step, just get all data from DB and don't ask user again
-        step = get_progress_steps(self.project.args['app_id'], USER_TASKS_STEP)
-        if step and not should_execute_step(self.project.args['step'], USER_TASKS_STEP):
-            step_already_finished(self.project.args, step)
-            return step['user_tasks']
-
-        # USER TASKS
-        msg = "User Tasks:\n"
-        print(color_green_bold(msg))
-        logger.info(msg)
-
-        self.project.user_tasks = self.convo_user_stories.continuous_conversation('user_stories/user_tasks.prompt',
-                                                                                  {'END_RESPONSE': END_RESPONSE})
-
-        logger.info(f"Final user tasks: {self.project.user_tasks}")
-
-        save_progress(self.project.args['app_id'], self.project.current_step, {
-            "messages": self.convo_user_stories.messages,
-            "user_tasks": self.project.user_tasks,
-            "app_data": generate_app_data(self.project.args)
-        })
-
-        return self.project.user_tasks
-        # USER TASKS END
+            # Ask the user for the main app definition
+            self.project.main_prompt = ask_for_main_
