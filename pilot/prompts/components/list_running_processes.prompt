@@ -1,9 +1,9 @@
-{% if running_processes -%}
-Note that the following processes are already running:
+# Check if there are any running processes before starting a new one
+if running_processes:
+    # Display a note indicating which processes are currently running
+    print(f"Note that the following processes are already running:\n")
 
-{%- for key, data in running_processes.items() %}
-
-command_id: {{ key }}
-command: {{ data[0] }}
-{%- endfor -%}
-{%- endif -%}
+    # Iterate through the running_processes dictionary
+    for command_id, command_info in running_processes.items():
+        # Print the command ID and corresponding command
+        print(f"command_id: {command_id}\ncommand: {command_info[0]}\n")
