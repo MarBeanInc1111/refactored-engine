@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, Optional
+from typing import Optional, Dict, List
 from uuid import uuid4
 
 from utils.style import color_green_bold
@@ -9,13 +9,43 @@ from utils.exit import trace_code_event
 from .node_express_mongoose import NODE_EXPRESS_MONGOOSE
 from .render import Renderer
 
-if TYPE_CHECKING:  # noqa
-    from helpers.Project import Project  # noqa
-
 PROJECT_TEMPLATES = {
     "node_express_mongoose": NODE_EXPRESS_MONGOOSE,
 }
 
+def render_and_save_files(
+    template: Dict,
+    project_name: str,
+    project_description: str,
+    root_path: str,
+    random_secret: str,
+) -> List[Dict]:
+    r = Renderer(os.path.join(os.path.dirname(__file__), "tpl"))
+    files = r.render_tree(template["path"], {
+        "project_name": project_name,
+        "project_description": project_description,
+        "random_secret": random_secret,
+    })
+
+    project_files = []
+
+    for file_name, file_content in files.items():
+        full_path = os.path.join(root_path, file_name)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        try:
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(file_content)
+        except Exception as err:
+            logger.error(f"Error saving file '{file_name}': {err}", exc_info=True)
+
+        rel_dir = os.path.dirname(file_name)
+        project_files.append({
+            "name": os.path.basename(file_name),
+            "path": "/" if rel_dir in ["", "."] else rel_dir,
+            "content": file_content,
+        })
+
+    return project_files
 
 def apply_project_template(
     project: "Project",
@@ -25,12 +55,6 @@ def apply_project_template(
 
     :param project: the project object
     :return: a summary of the applied template, or None if no template was applied
-
-    If project.project_template is None (not selected), or not one of the supported
-    templates, do nothing.
-
-    Note: the template summary is injected in the project description, and the
-    created files are saved to a snapshot of the last development step (LLM request).
     """
     template_name = project.project_template
     if not template_name or template_name not in PROJECT_TEMPLATES:
@@ -43,34 +67,15 @@ def apply_project_template(
     template = PROJECT_TEMPLATES[template_name]
     install_hook = template.get("install_hook")
 
-    r = Renderer(
-        os.path.join(os.path.dirname(__file__), "tpl")
+    random_secret = uuid4().hex
+
+    project_files = render_and_save_files(
+        template,
+        project_name,
+        project_description,
+        root_path,
+        random_secret,
     )
-
-    files = r.render_tree(
-        template["path"],
-        {
-            "project_name": project_name,
-            "project_description": project_description,
-            "random_secret": uuid4().hex,
-        },
-    )
-
-    project_files = []
-
-    for file_name, file_content in files.items():
-        full_path = os.path.join(root_path, file_name)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        with open(full_path, "w", encoding="utf-8") as f:
-            f.write(file_content)
-
-        rel_dir = os.path.dirname(file_name)
-        project_files.append({
-            "name": os.path.basename(file_name),
-             # ensure the path is compatible with how the rest of GPT Pilot thinks about paths
-            "path": "/" if rel_dir in ["", "."] else rel_dir,
-            "content": file_content,
-        })
 
     print(color_green_bold(f"Applying project template {template['description']}...\n"))
     logger.info(f"Applying project template {template_name}...")
@@ -89,5 +94,5 @@ def apply_project_template(
         )
 
     trace_code_event('project-template', {'template': template_name})
-    summary = "The code so far includes:\n" + template["summary"]
+    summary = f"The code so far includes:\n{template['summary']}"
     return summary
