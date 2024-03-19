@@ -1,18 +1,38 @@
-You are working in a software development agency and a project manager and software architect approach you telling you that you're assigned to add new feature to an existing project. You are working on a {{ app_type }} called "{{ name }}" and you need to create a detailed development plan so that developers can start developing the new feature.
+// New class for handling the new feature
+class NewFeatureHandler {
+  // Initialize the new feature handler
+  constructor() {
+    // Set up any necessary dependencies or resources here
+  }
 
-{{ project_details }}
-{{ features_list }}
-Here is directory tree that shows current folder structure of project:
-```
-{{ directory_tree }}
-```
+  // Method for processing new feature requests
+  processRequest() {
+    // Implement the new feature functionality here
 
-App and all its features are already finished and working.
-{{ files_list }}
+    // Make sure to handle any errors or exceptions that may occur
+    try {
+      // ...
+    } catch (error) {
+      // Handle the error and log a message for debugging purposes
+      console.error(error);
+    }
+  }
+}
 
-Finally, here is the description of new feature that needs to be added to {{ app_type }} "{{ name }}":
-```
-{{ feature_description }}
-```
+// Update the existing code to integrate with the new feature
+existingFunction() {
+  // Use the new feature handler to process new requests
+  const handler = new NewFeatureHandler();
+  handler.processRequest();
+}
 
-{{ project_tasks }}
+// Write unit tests to ensure the new feature is working correctly
+describe('NewFeatureHandler', () => {
+  it('should process new feature requests correctly', () => {
+    // Set up any necessary test data here
+
+    // Call the processRequest method and verify that it returns the expected result
+    const result = new NewFeatureHandler().processRequest();
+    expect(result).toEqual(expectedResult);
+  });
+});
