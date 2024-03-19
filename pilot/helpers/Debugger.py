@@ -2,9 +2,11 @@ import platform
 import uuid
 import re
 import traceback
+from typing import List, Dict, Any
+
+import numpy as np
 
 # Importing necessary modules for code execution, exceptions, logging, prompts, and utils.
-
 from const.code_execution import MAX_COMMAND_DEBUG_TRIES, MAX_RECURSION_LAYER
 from const.function_calls import DEBUG_STEPS_BREAKDOWN
 from const.messages import AFFIRMATIVE_ANSWERS, NEGATIVE_ANSWERS
@@ -16,15 +18,15 @@ from prompts.prompts import ask_user
 from utils.exit import trace_code_event
 from utils.print import print_task_progress
 
-
 class Debugger:
     def __init__(self, agent):
         # Initializing the Debugger class with an agent object.
         self.agent = agent
         self.recursion_layer = 0
 
-    def debug(self, convo, command=None, user_input=None, issue_description=None, is_root_task=False,
-              ask_before_debug=False, task_steps=None, step_index=None):
+    def debug(self, convo, command: dict = None, user_input: str = None, issue_description: str = None,
+              is_root_task: bool = False, ask_before_debug: bool = False, task_steps: List[Dict[str, Any]] = None,
+              step_index: int = None) -> bool:
         # Main debugging function that takes in conversation, command, user_input, issue_description,
         # is_root_task, ask_before_debug, task_steps, and step_index as arguments.
 
@@ -57,7 +59,8 @@ class Debugger:
             # Checking if user input is provided or if it's not the first iteration of the loop.
             if ask_before_debug or i > 0:
                 # Asking the user for permission to start debugging and getting the answer.
-                answer = ask_user(self.agent.project, 'Can I start debugging this issue [Y/n/error details]?', require_some_input=False)
+                answer = ask_user(self.agent.project, 'Can I start debugging this issue [Y/n/error details]?',
+                                  require_some_input=False)
 
                 # Checking if the user wants to cancel debugging.
                 if answer.lower() in NEGATIVE_ANSWERS:
@@ -74,57 +77,53 @@ class Debugger:
             print('', type='verbose', category='agent:debugger')
 
             # Sending a message to the developer with the provided arguments.
-            llm_response = convo.send_message('dev_ops/debug.prompt',
-                {
-                    'command': command['command'] if command is not None else None,
-                    'user_input': user_input,
-                    'issue_description': issue_description,
-                    'task_steps': task_steps,
-                    'step_index': step_index,
-                    'os': platform.system()
-                },
-                DEBUG_STEPS_BREAKDOWN)
+            try:
+                llm_response = convo.send_message('dev_ops/debug.prompt',
+                                                  {
+                                                      'command': command['command'] if command is not None else None,
+                                                      'user_input': user_input,
+                                                      'issue_description': issue_description,
+                                                      'task_steps': task_steps,
+                                                      'step_index': step_index,
+                                                      'os': platform.system()
+                                                  },
+                                                  DEBUG_STEPS_BREAKDOWN)
+            except Exception as e:
+                trace_code_event(e)
+                continue
 
             # Initializing completed_steps as an empty list.
             completed_steps = []
 
             # Printing the task progress.
-            print_task_progress(i+1, i+1, user_input, 'debugger', 'in_progress')
+            print_task_progress(i + 1, i + 1, user_input, 'debugger', 'in_progress')
 
             # Trying to execute the task with the provided arguments.
             try:
-                while True:
-                    steps = completed_steps + llm_response['steps']
+                steps = completed_steps + llm_response['steps']
 
-                    # Executing the task with the provided steps.
-                    result = self.agent.project.developer.execute_task(
-                        convo,
-                        steps,
-                        test_command=command,
-                        test_after_code_changes=True,
-                        continue_development=False,
-                        is_root_task=is_root_task,
-                        continue_from_step=len(completed_steps),
-                        task_source='debugger',
-                    )
+                # Executing the task with the provided steps.
+                result = self.agent.project.developer.execute_task(
+                    convo,
+                    steps,
+                    test_command=command,
+                    test_after_code_changes=True,
+                    continue_development=False,
+                    is_root_task=is_root_task,
+                    continue_from_step=len(completed_steps),
+                    task_source='debugger',
+                )
 
-                    # Checking if the step index is provided in the result.
-                    if 'step_index' in result:
-                        # Updating the task with the provided result.
-                        result['os'] = platform.system()
-                        step_index = result['step_index']
-                        completed_steps = steps[:step_index+1]
-                        result['completed_steps'] = completed_steps
-                        result['current_step'] = steps[step_index]
-                        result['next_steps'] = steps[step_index + 1:]
-                        result['current_step_index'] = step_index
+                # Checking if the step index is provided in the result.
+                if 'step_index' in result:
+                    # Updating the task with the provided result.
+                    result['os'] = platform.system()
+                    step_index = result['step_index']
+                    completed_steps = steps[:step_index + 1]
+                    result['completed_steps'] = completed_steps
+                    result['current_step'] = steps[step_index]
+                    result['next_steps'] = steps[step_index + 1:]
+                    result['current_step_index'] = step_index
 
-                        # Removing the previous debug plan and building a new one.
-                        convo.remove_last_x_messages(2)
-                        # todo before updating task first check if update is needed
-                        llm_response = convo.send_message('development/task/update_task.prompt', result,
-                            DEBUG_STEPS_BREAKDOWN)
-                    else:
-                        # Setting success as the result success.
-                        success = result['success']
-                        if not success
+                    # Removing the previous debug plan and building a new one.
+                    convo.remove_last_x_messages(2)
