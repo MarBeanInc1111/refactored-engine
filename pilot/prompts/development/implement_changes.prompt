@@ -1,39 +1,48 @@
 import os
 import sys
 
-def main(file_name):
+def main(input_file_name):
     # Ensure the input file is provided
-    if len(file_name) == 0:
+    if len(input_file_name) == 0:
         print("Error: No input file provided.")
         sys.exit(1)
 
     # Check if the file exists
-    if not os.path.isfile(file_name):
-        print(f"Error: File '{file_name}' not found.")
+    if not os.path.isfile(input_file_name):
+        print(f"Error: File '{input_file_name}' not found.")
         sys.exit(1)
 
     # Read the input file
-    with open(file_name, 'r') as file:
-        lines = file.readlines()
+    lines = read_file(input_file_name)
 
     # Perform the required modifications
+    modified_lines = modify_lines(lines)
+
+    # Write the modified lines to the output file
+    write_file(input_file_name, modified_lines)
+
+def read_file(file_name):
+    with open(file_name, 'r') as file:
+        lines = file.readlines()
+    return [line.strip() for line in lines]
+
+def modify_lines(lines):
     modified_lines = []
     for line in lines:
-        # Remove any leading or trailing whitespace
-        line = line.strip()
-
         # Replace 'old_string' with 'new_string'
         line = line.replace('old_string', 'new_string')
 
         # Add a comment for hardcoded configuration value
         if 'hardcoded_value' in line:
+            config_description = "Description of the hardcoded value"
             line = f"{line}  # INPUT_REQUIRED {config_description}"
 
         modified_lines.append(line)
+    return modified_lines
 
-    # Write the modified lines to the output file
+def write_file(file_name, lines):
     with open(file_name, 'w') as file:
-        file.writelines(modified_lines)
+        file.writelines('\n'.join(lines) + '\n')
 
 # Call the main function with the input file name
 if __name__ == "__main__":
