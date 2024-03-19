@@ -1,12 +1,17 @@
-{{ steps_list }}
-{%- if task_steps and step_index is not none -%}
-When trying to see if command was ran successfully, take into consideration steps that were previously executed and steps that will be executed after the current step. It can happen that command seems like it failed but it will be fixed with next steps. In that case you should consider that command to be successfully executed.
-{%- endif %}
-{%- if additional_message %}{{ additional_message }}{% endif %}
-I ran the command `{{ command }}`. The output was:
-{#%- if error_response %}, it {{ error_response }}{% endif %#}
-{{ cli_response }}
+# This code is designed to execute a command and determine if it was successful or not.
+# It takes into account previous and subsequent steps to ensure that a command
+# that may have initially failed was actually successful in the context of the overall process.
 
-Think about this output and not any output in previous messages. If the command was successfully executed, respond with `DONE`. If it wasn't, respond with `BUG`.
+# The 'steps_list' variable is used to keep track of the steps that have been executed.
+# The 'task_steps' and 'step_index' variables are used to determine if the current command
+# is in the middle of a sequence of steps.
 
-Do not respond with anything other than these two keywords.
+# The 'additional_message' variable can be used to provide any extra information or context
+# that might be helpful in determining if the command was successful.
+
+# The 'command' variable contains the command that will be executed.
+# The 'cli_response' variable will store the output of the command.
+
+# The 'error_response' variable is used to indicate if there was an error when executing the command.
+
+# The code will respond with 'DONE' if the command was successful, or 'BUG' if it was not.
