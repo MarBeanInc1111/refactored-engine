@@ -2,46 +2,78 @@
 import builtins
 import json
 import os
-
 import sys
-import traceback
+from typing import Any, Dict, List, Optional
 
-# Import required modules and libraries
-# ...
-
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    raise RuntimeError('Python environment for GPT Pilot is not completely set up: required package "python-dotenv" is missing.') from None
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Import utility and helper modules
-# ...
-
-def init():
-    # Check if the "euclid" database exists, if not, create it
-    if not database_exists():
-        create_database()
-
-    # Check if the tables exist, if not, create them
-    if not tables_exist():
-        create_tables()
-
-    # Parse command-line arguments
-    arguments = get_arguments()
-
-    logger.info('Starting with args: %s', arguments)
-
-    return arguments
+import dotenv
+import telemetry
 
 
-if __name__ == "__main__":
+def database_exists() -> bool:
+    # ...
+    pass
+
+
+def create_database() -> None:
+    # ...
+    pass
+
+
+def tables_exist() -> bool:
+    # ...
+    pass
+
+
+def create_tables() -> None:
+    # ...
+    pass
+
+
+def get_arguments() -> List[str]:
+    # ...
+    pass
+
+
+def get_custom_print(args: List[str]) -> tuple[builtins.print, Any]:
+    # ...
+    pass
+
+
+def get_api_key_and_endpoint(args: List[str]) -> None:
+    if "--api-key" in args:
+        os.environ["OPENAI_API_KEY"] = args["--api-key"]
+    if "--api-endpoint" in args:
+        os.env["OPENAI_ENDPOINT"] = args["--api-endpoint"]
+
+
+def handle_arguments(args: List[str]) -> None:
+    if "--get-created-apps-with-steps" in args:
+        # ...
+
+    elif "--version" in args:
+        # ...
+
+    elif "--ux-test" in args:
+        # ...
+
+    elif "app_id" in args:
+        # ...
+
+
+def exit_gpt_pilot(project: Optional[Any], ask_feedback: bool) -> None:
+    # ...
+    pass
+
+
+def main() -> None:
     # Initialize variables for handling exit and feedback
     ask_feedback = True
     project = None
     run_exit_fn = True
+
+    # Load environment variables from .env file
+    if not os.path.exists(".env") or not dotenv.load_dotenv():
+        raise RuntimeError(".env file not found or missing environment variables.")
 
     # Initialize arguments
     args = init()
@@ -50,28 +82,11 @@ if __name__ == "__main__":
         # Set up custom print function and handle API keys and endpoints
         builtins.print, ipc_client_instance = get_custom_print(args)
 
-        if '--api-key' in args:
-            os.environ["OPENAI_API_KEY"] = args['--api-key']
-        if '--api-endpoint' in args:
-            os.environ["OPENAI_ENDPOINT"] = args['--api-endpoint']
+        get_api_key_and_endpoint(args)
 
         # Handle different command-line arguments
-        if '--get-created-apps-with-steps' in args:
-            # ...
-            run_exit_fn = False
+        handle_arguments(args)
 
-        elif '--version' in args:
-            # ...
-            run_exit_fn = False
-
-        elif '--ux-test' in args:
-            # ...
-            run_exit_fn = False
-
-        elif 'app_id' in args:
-            # ...
-
-        # Handle any other unexpected exceptions and record a crash report
     except Exception as err:
         print('', type='verbose', category='error')
         print(color_red('---------- GPT PILOT EXITING WITH ERROR ----------'))
@@ -81,11 +96,15 @@ if __name__ == "__main__":
         telemetry.record_crash(err)
 
     finally:
-        # Perform necessary cleanup and exit the application
         if project is not None:
             if project.check_ipc():
                 ask_feedback = False
-            project.current_task.exit()
+            if project.current_task is not None:
+                project.current_task.exit()
             project.finish_loading(do_cleanup=False)
         if run_exit_fn:
             exit_gpt_pilot(project, ask_feedback)
+
+
+if __name__ == "__main__":
+    main()
