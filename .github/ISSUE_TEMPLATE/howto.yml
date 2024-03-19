@@ -1,83 +1,9 @@
-# This is the main entry point for the GPT Pilot application.
-# It is responsible for initializing the application and starting the main event loop.
-def main():
-    # Create a new instance of the GPT Pilot application.
-    app = GptPilotApp()
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QToolBar, QAction, QMenu, QMenuBar, QStatusBar, QDockWidget
 
-    # Initialize the application with any necessary configuration or data.
-    app.initialize()
-
-    # Start the main event loop for the application.
-    app.start_event_loop()
-
-# This class represents the main application for GPT Pilot.
-# It is responsible for initializing and running the application.
-class GptPilotApp:
-    # Initialize a new instance of the GPT Pilot application.
-    def __init__(self):
-        # Initialize any necessary instance variables.
-        self.window = None
-
-    # Initialize the application with any necessary configuration or data.
-    def initialize(self):
-        # Create the main window for the application.
-        self.window = MainWindow()
-
-        # Load any necessary configuration or data for the application.
-        self.load_configuration()
-
-    # Start the main event loop for the application.
-    def start_event_loop(self):
-        # Run the main event loop for the application.
-        # This will block until the application is closed.
-        qapp.exec_()
-
-# This class represents the main window for the GPT Pilot application.
-# It is responsible for displaying the user interface and handling user input.
 class MainWindow(QMainWindow):
-    # Initialize a new instance of the MainWindow class.
     def __init__(self):
-        # Initialize the parent class.
         super().__init__()
 
-        # Set up the user interface for the main window.
-        self.setup_ui()
-
-    # Set up the user interface for the main window.
-    def setup_ui(self):
-        # Create and configure the various widgets and layouts for the main window.
-        # This includes creating menus, toolbars, and dock widgets.
-
-        # Set the main window's title and size.
         self.setWindowTitle("GPT Pilot")
-        self.resize(800, 600)
-
-        # Create the central widget for the main window.
-        # This will contain the main content area for the application.
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        # Create a vertical layout for the central widget.
-        layout = QVBoxLayout()
-        central_widget.setLayout(layout)
-
-        # Create and add a toolbar to the main window.
-        toolbar = self.addToolBar("Main Toolbar")
-
-        # Create and add a menu bar to the main window.
-        menu_bar = self.menuBar()
-
-        # Create and add a file menu to the menu bar.
-        file_menu = menu_bar.addMenu("File")
-
-        # Add a quit action to the file menu.
-        quit_action = QAction("Quit", self)
-        quit_action.triggered.connect(self.close)
-        file_menu.addAction(quit_action)
-
-        # Create and add a status bar to the main window.
-        self.statusBar()
-
-        # Create and add a dock widget to the main window.
-        dock_widget = QDockWidget("Dock Widget", self)
-        dock_widget.
+        self.resize(800, 60
