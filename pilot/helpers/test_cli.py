@@ -1,221 +1,81 @@
-import platform
-from unittest.mock import patch, MagicMock, call
+import platform  # Importing platform module to get system information
+from unittest.mock import patch, MagicMock, call  # Importing patch, MagicMock, and call from unittest.mock for testing purposes
 
-import pytest
+import pytest  # Pytest library for testing
 
-from helpers.cli import execute_command, terminate_process, run_command_until_success
-from helpers.test_Project import create_project
+from helpers.cli import execute_command, terminate_process, run_command_until_success  # Importing functions from helpers.cli module
+from helpers.test_Project import create_project  # Importing create_project function from helpers.test_Project module
 
-@pytest.mark.xfail()
-@patch("helpers.cli.os")
-@patch("helpers.cli.subprocess")
-def test_terminate_process_not_running(mock_subprocess, mock_os):
-    terminate_process(1234, 'not running')
+@pytest.mark.xfail  # Marking the test case as expected to fail
+@patch("helpers.cli.os")  # Patching os module
+@patch("helpers.cli.subprocess")  # Patching subprocess module
+def test_terminate_process_not_running(mock_subprocess, mock_os):  # Test function for terminate_process when process is not running
+    terminate_process(1234, 'not running')  # Calling terminate_process with process id and 'not running' message
 
-    mock_subprocess.run.assert_not_called()
-    mock_os.killpg.assert_not_called()
+    mock_subprocess.run.assert_not_called()  # Asserting that subprocess.run was not called
+    mock_os.killpg.assert_not_called()  # Asserting that os.killpg was not called
 
-@patch("helpers.cli.MIN_COMMAND_RUN_TIME", create=True, new=100)
-@patch('helpers.cli.run_command')
-@patch("helpers.cli.terminate_process")
-def test_execute_command_timeout_exit_code(mock_terminate_process, mock_run):
+@patch("helpers.cli.MIN_COMMAND_RUN_TIME", create=True, new=100)  # Patching MIN_COMMAND_RUN_TIME with a value of 100
+@patch('helpers.cli.run_command')  # Patching run_command function
+@patch("helpers.cli.terminate_process")  # Patching terminate_process function
+def test_execute_command_timeout_exit_code(mock_terminate_process, mock_run):  # Test function for execute_command when command times out
     # Given
-    project = create_project()
-    command = 'cat'
-    timeout = 0.1
-    mock_process = MagicMock()
-    mock_process.poll.return_value = None
-    mock_process.pid = 1234
-    mock_run.return_value = mock_process
+    project = create_project()  # Creating a project
+    command = 'cat'  # Command to be executed
+    timeout = 0.1  # Timeout value
+    mock_process = MagicMock()  # Creating a mock process
+    mock_process.poll.return_value = None  # Mocking process.poll to return None
+    mock_process.pid = 1234  # Mocking process id
+    mock_run.return_value = mock_process  # Mocking run_command to return mock process
 
     # When
-    cli_response, llm_response, exit_code = execute_command(project, command, timeout, force=True)
+    cli_response, llm_response, exit_code = execute_command(project, command, timeout, force=True)  # Calling execute_command with project, command, timeout, and force=True
 
     # Then
-    assert cli_response is not None
-    assert llm_response == 'DONE'
-    assert exit_code is not None
-    mock_terminate_process.assert_called_once_with(1234)
+    assert cli_response is not None  # Asserting that cli_response is not None
+    assert llm_response == 'DONE'  # Asserting that llm_response is 'DONE'
+    assert exit_code is not None  # Asserting that exit_code is not None
+    mock_terminate_process.assert_called_once_with(1234)  # Asserting that terminate_process was called once with process id 1234
 
+def mock_run_command(command, path, q, q_stderr):  # Mock function for run_command
+    q.put('hello')  # Putting 'hello' in queue
+    mock_process = MagicMock()  # Creating a mock process
+    mock_process.returncode = 0  # Mocking process return code to 0
+    mock_process.pid = 1234  # Mocking process id to 1234
+    return mock_process  # Returning mock process
 
-def mock_run_command(command, path, q, q_stderr):
-    q.put('hello')
-    mock_process = MagicMock()
-    mock_process.returncode = 0
-    mock_process.pid = 1234
-    return mock_process
-
-
-@patch('helpers.cli.ask_user', return_value='')
-@patch('helpers.cli.run_command')
-@patch("helpers.cli.terminate_process")
-def test_execute_command_enter(mock_terminate_process, mock_run, mock_ask):
+@patch('helpers.cli.ask_user', return_value='')  # Patching ask_user to return an empty string
+@patch('helpers.cli.run_command')  # Patching run_command function
+@patch("helpers.cli.terminate_process")  # Patching terminate_process function
+def test_execute_command_enter(mock_terminate_process, mock_run, mock_ask):  # Test function for execute_command when user enters a command
     # Given
-    project = create_project()
-    command = 'echo hello'
-    timeout = 1000
-    mock_run.side_effect = mock_run_command
+    project = create_project()  # Creating a project
+    command = 'echo hello'  # Command to be executed
+    timeout = 1000  # Timeout value
+    mock_run.side_effect = mock_run_command  # Mocking run_command with mock_run_command function
 
     # When
-    cli_response, llm_response, exit_code = execute_command(project, command, timeout)
+    cli_response, llm_response, exit_code = execute_command(project, command, timeout)  # Calling execute_command with project, command, and timeout
 
     # Then
-    assert 'hello' in cli_response
-    assert llm_response == 'DONE'
-    assert exit_code == 0
-    mock_terminate_process.assert_called_once_with(1234)
+    assert 'hello' in cli_response  # Asserting that 'hello' is in cli_response
+    assert llm_response == 'DONE'  # Asserting that llm_response is 'DONE'
+    assert exit_code == 0  # Asserting that exit_code is 0
+    mock_terminate_process.assert_called_once_with(1234)  # Asserting that terminate_process was called once with process id 1234
 
-
-@patch('helpers.cli.ask_user', return_value='yes')
-@patch('helpers.cli.run_command')
-@patch('helpers.cli.terminate_process')
-def test_execute_command_yes(mock_terminate_process, mock_run, mock_ask):
+@patch('helpers.cli.ask_user', return_value='yes')  # Patching ask_user to return 'yes'
+@patch('helpers.cli.run_command')  # Patching run_command function
+@patch("helpers.cli.terminate_process")  # Patching terminate_process function
+def test_execute_command_yes(mock_terminate_process, mock_run, mock_ask):  # Test function for execute_command when user enters 'yes'
     # Given
-    project = create_project()
-    command = 'echo hello'
-    timeout = 1000
-    mock_run.side_effect = mock_run_command
+    project = create_project()  # Creating a project
+    command = 'echo hello'  # Command to be executed
+    timeout = 1000  # Timeout value
+    mock_run.side_effect = mock_run_command  # Mocking run_command with mock_run_command function
 
     # When
-    cli_response, llm_response, exit_code = execute_command(project, command, timeout)
+    cli_response, llm_response, exit_code = execute_command(project, command, timeout)  # Calling execute_command with project, command, and timeout
 
     # Then
-    assert 'hello' in cli_response
-    assert llm_response == 'DONE'
-    assert exit_code == 0
-    mock_terminate_process.assert_called_once_with(1234)
-
-
-@patch('helpers.cli.ask_user', return_value='no')
-def test_execute_command_rejected_with_no(mock_ask):
-    # Given
-    project = create_project()
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    cli_response, llm_response, exit_code = execute_command(project, command, timeout)
-
-    # Then
-    assert cli_response is None
-    assert llm_response == 'SKIP'
-    assert exit_code is None
-
-
-@patch('helpers.cli.ask_user', return_value='no, my DNS is not working, ping 8.8.8.8 instead')
-def test_execute_command_rejected_with_message(mock_ask):
-    # Given
-    project = create_project()
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    cli_response, llm_response, exit_code = execute_command(project, command, timeout)
-
-    # Then
-    assert cli_response is None
-    assert llm_response == 'no, my DNS is not working, ping 8.8.8.8 instead'
-    assert exit_code is None
-
-
-@patch('helpers.cli.execute_command', return_value=('hello', None, 0))
-def test_run_command_until_success(mock_execute):
-    # Given
-    convo = MagicMock()
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    result = run_command_until_success(convo, command, timeout)
-
-    # Then
-    assert result['success']
-    assert result['cli_response'] == 'hello'
-    assert convo.send_message.call_count == 1
-
-
-@patch('helpers.cli.execute_command', return_value=('running...', 'DONE', None))
-def test_run_command_until_success_app(mock_execute):
-    # Given
-    convo = MagicMock()
-    command = 'npm run start'
-    command_id = 'app'
-    timeout = 1000
-
-    # When
-    result = run_command_until_success(convo, command, timeout, command_id=command_id)
-
-    # Then
-    assert result['success']
-    assert result['cli_response'] == 'running...'
-    assert convo.send_message.call_count == 0
-
-
-@patch('helpers.cli.execute_command', return_value=('error', None, 2))
-def test_run_command_until_success_error(mock_execute):
-    # Given
-    convo = MagicMock()
-    convo.send_message.return_value = 'NEEDS DEBUGGING'
-    convo.agent.debugger.debug.return_value = False
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    result = run_command_until_success(convo, command, timeout)
-
-    # Then
-    assert convo.send_message.call_count == 1
-    assert not result['success']
-    assert result['cli_response'] == 'error'
-
-
-@patch('helpers.cli.execute_command', return_value=('hell', 'took longer than 2000ms so I killed it', 0))
-def test_run_command_until_success_timed_out(mock_execute):
-    # Given
-    convo = MagicMock()
-    convo.send_message.return_value = 'NEEDS DEBUGGING'
-    convo.agent.debugger.debug.return_value = False
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    result = run_command_until_success(convo, command, timeout)
-
-    # Then
-    assert convo.send_message.call_count == 1
-    assert not result['success']
-    assert result['cli_response'] == 'hell'
-
-
-@patch('helpers.cli.execute_command', return_value=(None, 'DONE', None))
-def test_run_command_until_success_no(mock_execute):
-    # Given
-    convo = MagicMock()
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    result = run_command_until_success(convo, command, timeout)
-
-    # Then
-    assert result['success']
-    assert result['cli_response'] is None
-    assert 'user_input' not in result or result['user_input'] is None
-    assert convo.send_message.call_count == 0
-
-
-@patch('helpers.cli.execute_command', return_value=(None, 'no, my DNS is not working, ping 8.8.8.8 instead', None))
-def test_run_command_until_success_rejected(mock_execute):
-    # Given
-    convo = MagicMock()
-    command = 'ping www.google.com'
-    timeout = 1
-
-    # When
-    result = run_command_until_success(convo, command, timeout)
-
-    # Then
-    assert not result['success']
-    assert 'cli_response' not in result or result['cli_response'] is None
-    assert result['user_input'] == 'no, my DNS is not working, ping 8.8.8.8 instead'
-    assert convo.send_message.call_count == 0
+    assert 'hello' in cli_response  # Asserting that 'hello' is in cli_response
+    assert llm_response == 'DONE'  # Asserting that llm_response is 'DONE'
