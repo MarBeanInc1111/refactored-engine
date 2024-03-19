@@ -1,6 +1,6 @@
 from unittest.mock import patch
-
-from utils.telemetry import Telemetry
+import uuid
+from utils.telemetry import Telemetry, DEFAULT_ENDPOINT
 
 @patch("utils.telemetry.settings")
 def test_telemetry_constructor_with_telemetry_enabled(mock_settings):
@@ -58,11 +58,8 @@ def test_telemetry_constructor_logging_enabled(mock_settings, caplog):
 @patch("utils.telemetry.sys.platform", "test_platform")
 @patch("utils.telemetry.sys.version", "test_version")
 @patch("utils.telemetry.version", "test_pilot_version")
-def test_clear_data_resets_data():
+def test_clear_data_resets_data(telemetry):
     # Test the clear_data method resets telemetry data
-    telemetry = Telemetry()
-    empty = Telemetry()
-
     telemetry.data = {
         "model": "test-model",
         "num_llm_requests": 10,
@@ -73,6 +70,7 @@ def test_clear_data_resets_data():
         "user_feedback": "Great!",
         "user_contact": "user@example.com",
     }
+    empty = Telemetry()
     # Check if telemetry data is not equal to empty telemetry data
     assert telemetry.data != empty.data
 
@@ -82,9 +80,8 @@ def test_clear_data_resets_data():
     assert telemetry.data == empty.data
 
 
-def test_clear_data_resets_times():
+def test_clear_data_resets_times(telemetry):
     # Test the clear_data method resets start_time and end_time
-    telemetry = Telemetry()
     telemetry.start_time = 1234567890
     telemetry.end_time = 1234567895
 
@@ -95,9 +92,8 @@ def test_clear_data_resets_times():
     assert telemetry.end_time is None
 
 
-def test_clear_counter_resets_times_but_leaves_data():
+def test_clear_counter_resets_times_but_leaves_data(telemetry):
     # Test the clear_counters method resets start_time and end_time but leaves data
-    telemetry = Telemetry()
     telemetry.data["model"] = "test-model"
     telemetry.start_time = 1234567890
     telemetry.end_time = 1234567895
@@ -112,23 +108,10 @@ def test_clear_counter_resets_times_but_leaves_data():
 
 
 @patch("utils.telemetry.settings")
-@patch("utils.telemetry.uuid4")
-def test_telemetry_setup_already_enabled(mock_uuid4, mock_settings):
-    # Test the setup method when telemetry is already enabled
-    mock_settings.telemetry = {"id": "existing-id", "enabled": True}
-    telemetry = Telemetry()
-    telemetry.setup()
-    # Check if uuid4 is not called
-    mock_uuid4.assert_not_called()
-
-
-@patch("utils.telemetry.settings")
-@patch("utils.telemetry.uuid4")
-def test_telemetry_setup_enable(mock_uuid4, mock_settings):
+@patch("utils.telemetry.uuid4", return_value="fake-id")
+def test_telemetry_setup_enable(mock_uuid4, mock_settings, telemetry):
     # Test the setup method when telemetry is enabled
     mock_settings.telemetry = {"id": "existing-id", "enabled": False}
-    mock_uuid4.return_value = "fake-id"
-    telemetry = Telemetry()
     telemetry.setup()
 
     # Check if uuid4 is called once
@@ -138,10 +121,22 @@ def test_telemetry_setup_enable(mock_uuid4, mock_settings):
     # Check if settings are updated correctly
     assert mock_settings.telemetry == {
         "id": "telemetry-fake-id",
-        "endpoint": Telemetry.DEFAULT_ENDPOINT,
+        "endpoint": DEFAULT_ENDPOINT,
         "enabled": True,
     }
 
 
 @patch("utils.telemetry.settings")
-def test_set_updates_data(
+@patch("utils.telemetry.uuid4")
+def test_telemetry_setup_already_enabled(mock_uuid4, mock_settings, telemetry):
+    # Test the setup method when telemetry is already enabled
+    mock_settings.telemetry = {"id": "existing-id", "enabled": True}
+    telemetry.setup()
+    # Check if uuid4 is not called
+    mock_uuid4.assert_not_called()
+
+
+@patch("utils.telemetry.settings")
+def test_set_updates_data(mock_settings, telemetry):
+    # Test the set method updates data
+    telemetry.data = {"model": "test-model"}
