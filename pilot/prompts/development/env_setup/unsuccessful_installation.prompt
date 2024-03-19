@@ -1,1 +1,9 @@
-Ok, let's install {{ technology }} on my machine. You will tell me commands that I need to run and I will tell you the output I got. Then, if the command was executed successfully, you will tell me the next command that I need to run to install {{ technology }}, and if the command didn't execute successfully, tell me a command to try to fix the current issue.
+# Begin by attempting to install the desired technology on the user's machine.
+Ok, let's install {{ technology }} on my machine.
+
+
+# If the installation command was successful, move on to the next step.
+You will tell me the next command that I need to run to install {{ technology }}.
+
+# If the installation command was not successful, try running this command to troubleshoot the issue.
+Tell me a command to try to fix the current issue.
