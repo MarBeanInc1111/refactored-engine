@@ -9,15 +9,24 @@ from utils.style import color_green_bold, color_red, style_config
 from utils.utils import should_execute_step
 from const.common import STEPS
 
-
-def get_arguments():
+def get_arguments() -> dict:
     # The first element in sys.argv is the name of the script itself.
     # Any additional elements are the arguments passed from the command line.
     args = sys.argv[1:]
 
     # Create an empty dictionary to store the key-value pairs.
     arguments = {
-        'continuing_project': False
+        'continuing_project': False,
+        'app_id': None,
+        'user_id': None,
+        'email': None,
+        'password': None,
+        'step': None,
+        'workspace': None,
+        'app_type': None,
+        'name': None,
+        'status': None,
+        'theme': 'dark'
     }
 
     # Loop through the arguments and parse them as key-value pairs.
@@ -28,88 +37,101 @@ def get_arguments():
         else:
             arguments[arg] = True
 
-    theme_mapping = {'light': style_config.theme.LIGHT, 'dark': style_config.theme.DARK}
-    theme_value = arguments.get('theme', 'dark')
-    style_config.set_theme(theme=theme_mapping.get(theme_value, style_config.theme.DARK))
+    # Validate arguments
+    validate_arguments(arguments)
 
-    if 'user_id' not in arguments:
+    # Set theme
+    theme_mapping = {'light': style_config.theme.LIGHT, 'dark': style_config.theme.DARK}
+    style_config.set_theme(theme=theme_mapping.get(arguments['theme'], style_config.theme.DARK))
+
+    # Set user_id
+    if arguments['user_id'] is None:
         arguments['user_id'] = username_to_uuid(getuser())
 
-    app = None
-    if 'workspace' in arguments:
+    # Set app
+    if arguments['workspace'] is not None:
         arguments['workspace'] = os.path.abspath(arguments['workspace'])
         app = get_app_by_user_workspace(arguments['user_id'], arguments['workspace'])
         if app is not None:
             arguments['app_id'] = str(app.id)
             arguments['continuing_project'] = True
+            arguments['app_type'] = app.app_type
+            arguments['name'] = app.name
+            arguments['status'] = app.status
     else:
         arguments['workspace'] = None
 
-    if 'app_id' in arguments:
-        if app is None:
-            try:
-                app = get_app(arguments['app_id'])
-            except ValueError as err:
-                print(color_red(f"Error: {err}"))
-                sys.exit(-1)
-
-        arguments['app_type'] = app.app_type
-        arguments['name'] = app.name
-        arguments['status'] = app.status
-        arguments['continuing_project'] = True
-        if 'step' not in arguments or ('step' in arguments and not should_execute_step(arguments['step'], app.status)):
-            arguments['step'] = 'finished' if app.status == 'finished' else STEPS[STEPS.index(app.status) + 1]
-
-        print(color_green_bold('\n------------------ LOADING PROJECT ----------------------'))
-        print(color_green_bold(f'{app.name} (app_id={arguments["app_id"]})'))
-        print(color_green_bold('--------------------------------------------------------------\n'))
-
-    elif '--get-created-apps-with-steps' not in args and '--version' not in args:
+    if arguments['app_id'] is None:
         arguments['app_id'] = str(uuid.uuid4())
-        print(color_green_bold('\n------------------ STARTING NEW PROJECT ----------------------'))
-        print("If you wish to continue with this project in future run:")
-        print(color_green_bold(f'python {sys.argv[0]} app_id={arguments["app_id"]}'))
-        print(color_green_bold('--------------------------------------------------------------\n'))
+        print_success(f'Starting new project with app_id: {arguments["app_id"]}')
 
-    if 'email' not in arguments:
-        arguments['email'] = get_email()
-
-    if 'password' not in arguments:
-        arguments['password'] = 'password'
-
-    if 'step' not in arguments:
-        arguments['step'] = None
+    if arguments['step'] is None:
+        arguments['step'] = get_next_step(arguments)
 
     return arguments
 
+def validate_arguments(arguments: dict) -> None:
+    required_arguments = ['app_id', 'user_id', 'email', 'password']
+    for arg in required_arguments:
+        if arguments[arg] is None:
+            print_error(f'Error: Required argument {arg} is missing.')
+            sys.exit(-1)
 
-def get_email():
-    # Attempt to get email from .gitconfig
-    gitconfig_path = os.path.expanduser('~/.gitconfig')
+def print_usage() -> None:
+    print('Usage: python script.py [options]')
+    print('Options:')
+    print('  app_id=<app_id>          The app id.')
+    print('  user_id=<user_id>        The user id.')
+    print('  email=<email>            The email.')
+    print('  password=<password>      The password.')
+    print('  workspace=<workspace>    The workspace.')
+    print('  step=<step>              The step.')
+    print('  theme=<theme>            The theme (light or dark).')
 
-    if os.path.exists(gitconfig_path):
-        with open(gitconfig_path, 'r', encoding="utf-8") as file:
-            content = file.read()
+def should_execute_step(step: str, status: str) -> bool:
+    if step is None or status is None:
+        return False
+    if step == 'all':
+        return True
+    if status == 'finished':
+        return step == 'finished'
+    if step == 'finished':
+        return status == 'created'
+    return STEPS.index(step) > STEPS.index(status)
 
-            # Use regex to search for email address
-            email_match = re.search(r'email\s*=\s*([\w\.-]+@[\w\.-]+)', content)
+def get_app_by_app_id(app_id: str) -> dict:
+    app = get_app(app_id)
+    if app is not None:
+        return {
+            'app_id': str(app.id),
+            'app_type': app.app_type,
+            'name': app.name,
+            'status': app.status
+        }
+    return None
 
-            if email_match:
-                return email_match.group(1)
+def get_username() -> str:
+    return getuser()
 
-    # If not found, return a UUID
-    # todo change email so its not uuid4 but make sure to fix storing of development steps where
-    #  1 user can have multiple apps. In that case each app should have its own development steps
-    return str(uuid.uuid4())
+def get_app_type_name(app_type: str) -> str:
+    if app_type == 'web':
+        return 'Web Application'
+    if app_type == 'mobile':
+        return 'Mobile Application'
+    return 'Unknown'
 
+def get_next_step(arguments: dict) -> str:
+    if arguments['status'] == 'created':
+        return STEPS[STEPS.index('created') + 1]
+    return 'finished'
 
-def username_to_uuid(username):
-    """
-    Creates a consistent UUID from a username using SHA-256 hashing algorithm.
-    :param username: The username to be hashed.
-    :return: A UUID object created from the hashed username.
-    """
-    sha256 = hashlib.sha256(username.encode()).hexdigest()
-    # Format the hash to fit UUID format (8-4-4-4-12)
-    uuid_str = "{}-{}-{}-{}-{}".format(sha256[:8], sha256[8:12], sha256[12:16], sha256[16:20], sha256[20:32])
-    return uuid.UUID(uuid_str)
+def print_banner() -> None:
+    print_separator()
+    print_loading('Loading project...')
+    print_loading('Initializing environment...')
+    print_loading('Setting up configuration...')
+    print_loading('Checking dependencies...')
+    print_separator()
+
+def print_footer() -> None:
+    print_success('Project
