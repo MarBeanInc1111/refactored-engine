@@ -19,7 +19,6 @@ AVAILABLE_SETTINGS = [
     "openai_api_key",
 ]
 
-
 class Settings:
     """
     Application settings class.
@@ -87,4 +86,17 @@ class Settings:
         for key in self.__slots__:
             yield key, getattr(self, key)
 
-    def update
+    def __str__(self):
+        """
+        Return a string representation of the settings.
+        """
+        return '\n'.join(f'{key}: {value}' for key, value in self.__iter__())
+
+    def update(self, **kwargs):
+        """
+        Update the settings with the provided keyword arguments.
+
+        If a setting is not provided, its value will not be changed.
+        """
+        for key, value in kwargs.items():
+            if key in self.__slots__:
