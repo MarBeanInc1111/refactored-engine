@@ -1,2 +1,8 @@
-Response from the CLI:
-{{ cli_response }}
+def add_numbers(num1, num2):
+    return num1 + num2
+
+
+# This function is called 'add_numbers' and takes two arguments: 'num1' and 'num2'
+# The purpose of this function is to add the two numbers together
+# There are no special considerations or requirements for the input values
+# The function returns the sum of the two input values
