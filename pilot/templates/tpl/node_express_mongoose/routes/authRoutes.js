@@ -9,7 +9,7 @@ const router = express.Router();
 
 // Configuring session middleware
 router.use(session({
-  secret: 'your-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
 }));
@@ -26,7 +26,7 @@ router.post('/auth/register', async (req, res) => {
     // Destructuring the request body to get the username and password
     const { username, password } = req.body;
 
-    // Checking if the provided username and password are not empty
+    // Validating and sanitizing the input
     if (!username || !password) {
       return res.status(400).send('Username and password are required');
     }
@@ -40,7 +40,7 @@ router.post('/auth/register', async (req, res) => {
   } catch (error) {
     // Logging the error and sending a 500 status code with the error message
     console.error('Registration error:', error);
-    res.status(500).send(error.message);
+    res.status(500).send('An error occurred during registration');
   }
 });
 
@@ -56,7 +56,7 @@ router.post('/auth/login', async (req, res) => {
     // Destructuring the request body to get the username and password
     const { username, password } = req.body;
 
-    // Checking if the provided username and password are not empty
+    // Validating and sanitizing the input
     if (!username || !password) {
       return res.status(400).send('Username and password are required');
     }
@@ -76,16 +76,15 @@ router.post('/auth/login', async (req, res) => {
     if (isMatch) {
       req.session.userId = user._id;
       return res.redirect('/');
-    } else {
-      // If the passwords do not match, sending a 400 status code with an appropriate error message
-      return res.status(400).send('Invalid password');
     }
+
+    // If the passwords do not match, sending a 400 status code with an appropriate error message
+    return res.status(400).send('Invalid password');
   } catch (error) {
     // Logging the error and sending a 500 status code with the error message
     console.error('Login error:', error);
-    res.status(500).send(error.message);
+    res.status(500).send('An error occurred during login');
   }
 });
 
 module.exports = router;
-
