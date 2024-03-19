@@ -3,7 +3,9 @@ if running_processes:
     # Display a note indicating which processes are currently running
     print(f"Note that the following processes are already running:\n")
 
-    # Iterate through the running_processes dictionary
+    # Iterate through the running_processes dictionary using the items() method
     for command_id, command_info in running_processes.items():
-        # Print the command ID and corresponding command
-        print(f"command_id: {command_id}\ncommand: {command_info[0]}\n")
+        # Print the command ID and corresponding command using f-string formatting
+        print(f"command_id: {command_id}\ncommand: {command_info[0]}\n---")
+else:
+    print("No running processes found.")
