@@ -1,108 +1,92 @@
-from __future__ import annotations
+from __future__ import annotations  # Allows us to use class names in type hints
 
-from os import walk
-from os.path import join, relpath
-from typing import Any, Callable
+import os  # For file system operations
+import os.path  # For file system operations
+from typing import Any, Callable  # For type hinting
 
-from jinja2 import Environment, FileSystemLoader
+import jinja2  # For rendering templates
 
 
 class Renderer:
     """
-    Render a Jinja template
+    Render a Jinja template.
 
-    Sets up Jinja renderer and renders one or more templates
-    using provided context.
+    This class sets up a Jinja renderer and provides methods to render one or
+    more templates using a provided context. The rendered templates are returned
+    as strings, and nothing is written to disk.
 
-    * `render_template` renders a single template
-    * `render_tree` renders all templates starting from a predefined
-      root folder (which must reside inside templates folder structure)
-
-    Rendered template(s) are returned as strings. Nothing is written
-    to disk.
-
-    Usage:
-
-    ```
-    import Renderer from render
-    r = Renderer('path/to/templates')
-    output_string = r.render_template('template.html', {'key': 'value'})
-    output_tree = r.render_tree('tree/root', {'key': 'value'})
-    ```
+    Attributes:
+        template_dir (str): The directory where the templates are located.
+        jinja_env (jinja2.Environment): The Jinja environment used for rendering.
     """
 
     def __init__(self, template_dir: str):
+        """
+        Initialize the Renderer object.
+
+        Args:
+            template_dir (str): The directory where the templates are located.
+        """
         self.template_dir = template_dir
-        self.jinja_env = Environment(
-            loader=FileSystemLoader(template_dir),
+        self.jinja_env = self._create_jinja_environment()
+
+    def _create_jinja_environment(self) -> jinja2.Environment:
+        """
+        Create and configure the Jinja environment.
+
+        Returns:
+            jinja2.Environment: The Jinja environment used for rendering.
+        """
+        return jinja2.Environment(
+            loader=jinja2.FileSystemLoader(self.template_dir),
             autoescape=False,
             lstrip_blocks=True,
             trim_blocks=True,
             keep_trailing_newline=True,
         )
-        # Add filters here
-        # self.jinja_env.filters["qstr"] = qstr
 
     def render_template(self, template: str, context: Any) -> str:
         """
-        Render a single template to a string using provided context
+        Render a single template to a string using the provided context.
 
-        Parameters:
+        Args:
+            template (str): The name of the template file, relative to the
+                template directory.
+            context (Any): The context used for rendering the template.
 
-        * `template` - name of the template file, relative to `template_dir`
-
-        Returns the resulting string
+        Returns:
+            str: The rendered template as a string.
         """
-
-        # Jinja2 always uses /, even on Windows
-        template = template.replace('\\', '/')
+        template = template.replace('\\', '/')  # Jinja2 uses '/' on all platforms
 
         tpl_object = self.jinja_env.get_template(template)
         return tpl_object.render(context)
 
     def render_tree(self, root: str, context: Any, filter: Callable = None) -> dict[str, str]:
         """
-        Render a tree folder structure of templates using provided context
+        Render a tree of templates using the provided context.
 
-        Parameters:
-
-        * `root` - root of the tree (relative to template_dir)
-        * `output` - directory (need not exist) that the output should go to
-        * `filter` - if defined, will be called for each file to check if it
-                     needs to be processed and determine output file path
+        Args:
+            root (str): The root of the tree (relative to the template directory).
+            context (Any): The context used for rendering the templates.
+            filter (Callable, optional): A function to filter the files to render.
+                If provided, it should take a single string argument (the file
+                path relative to the tree root) and return a string (the
+                output file path) or None (to skip the file).
 
         Returns:
-
-        * a flat dictionary with file_name => contents structure
-
-        Root must be inside the template_dir (and must be specified relative
-        to it), but need not be at the root of the template-dir.
-
-        If supplied, `filter` must be a callable taking a single string
-        argument. It will be called for every file before processing it, with
-        the file name (relative to root of the tree) as the argument. If filter
-        returns a non-empty string, file will be rendered. If it returns None
-        or an empty string, file will be skipped. If `filter` is not defined,
-        all files are processed.
-
-        In the returned structure, `file_name` is location of the file
-        relative to the tree root (unless changed by `filter`) and
-        `contents` is file contents rendered to a binary (utf8-encoded) string.
-
-        Directories are implied by file paths, not represented by elements
-        in the returned dictionary.
+            dict[str, str]: A dictionary containing the rendered templates,
+                with file paths as keys and the rendered content as values.
         """
-
         retval = {}
 
-        # Actual full path of the root of the tree we're rendering
-        full_root = join(self.template_dir, root)
+        full_root = os.path.join(self.template_dir, root)
 
-        for path, subdirs, files in walk(full_root):
+        for path, subdirs, files in os.walk(full_root):
             for file in files:
-                file_path = join(path, file)  # actual full path of the template file
-                tpl_location = relpath(file_path, self.template_dir)  # template relative to template_dir
-                output_location = relpath(file_path, full_root)  # template relative to tree root
+                file_path = os.path.join(path, file)  # Full path of the template file
+                tpl_location = os.path.relpath(file_path, self.template_dir)  # Template location relative to template_dir
+                output_location = os.path.relpath(file_path, full_root)  # Template location relative to tree root
 
                 if filter:
                     output_location = filter(output_location)
