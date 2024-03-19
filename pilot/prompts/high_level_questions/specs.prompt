@@ -1,4 +1,11 @@
-I want you to create the {{ app_type }} (let's call it "{{ name }}") that can be described like this:
-```
-{{ prompt }}
-```
+# Gather information about the app
+app_type = input("Please enter the type of app you would like to create: ")
+name = input("What would you like to name this app? ")
+
+# Get a detailed description of the app
+prompt = f"Now, please describe the {app_type} called '{name}', including its purpose, features, and any other relevant details."
+description = input(prompt)
+
+# Print out the description of the app
+print("\nHere is the description of your app:")
+print(description)
