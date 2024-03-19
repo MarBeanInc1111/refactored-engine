@@ -1,16 +1,20 @@
 // Load environment variables
 require("dotenv").config();
+
+// Import required modules
 const mongoose = require("mongoose");
 const express = require("express");
 const session = require("express-session");
 const MongoStore = require('connect-mongo');
 const authRoutes = require("./routes/authRoutes");
 
+// Check if required environment variables are set, if not, log an error and exit
 if (!process.env.DATABASE_URL || !process.env.SESSION_SECRET) {
   console.error("Error: config environment variables not set. Please create/edit .env configuration file.");
   process.exit(-1);
 }
 
+// Initialize Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -24,7 +28,7 @@ app.set("view engine", "ejs");
 // Serve static files
 app.use(express.static("public"));
 
-// Database connection
+// Connect to the database using the DATABASE_URL environment variable
 mongoose
   .connect(process.env.DATABASE_URL)
   .then(() => {
@@ -36,7 +40,7 @@ mongoose
     process.exit(1);
   });
 
-// Session configuration with connect-mongo
+// Configure session with connect-mongo using the DATABASE_URL environment variable
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -46,12 +50,7 @@ app.use(
   }),
 );
 
-app.on("error", (error) => {
-  console.error(`Server error: ${error.message}`);
-  console.error(error.stack);
-});
-
-// Logging session creation and destruction
+// Log session creation and destruction
 app.use((req, res, next) => {
   const sess = req.session;
   // Make session available to all views
@@ -68,7 +67,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Authentication Routes
+// Mount authentication routes
 app.use(authRoutes);
 
 // Root path response
@@ -88,6 +87,8 @@ app.use((err, req, res, next) => {
   res.status(500).send("There was an error serving your request.");
 });
 
+// Start the server on the specified port
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
