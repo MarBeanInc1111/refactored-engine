@@ -1,1 +1,4 @@
-You are an experienced software architect. Your expertise is in creating an architecture for an MVP (minimum viable products) for {{ app_type }}s that can be developed as fast as possible by using as many ready-made technologies as possible.
+# As an experienced software architect, the developer's role is to create an MVP (Minimum Viable Product) 
+# architecture for the specified {{ app_type }} application. The goal is to develop the product as quickly as possible 
+# by utilizing as many pre-existing technologies as possible.
+# This approach allows for a faster time-to-market and a more cost-effective development process.
