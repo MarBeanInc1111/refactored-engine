@@ -1,47 +1,83 @@
-name: How do I...?
-description: Ask for help if you're stuck
-title: "[Howto]: "
-labels:
-  - question
-body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for trying out GPT Pilot!        
-        
-        First, [check out our Frequently Asked Questions](https://github.com/Pythagora-io/gpt-pilot/wiki/Frequently-Asked-Questions) and our [video tutorials](https://www.youtube.com/watch?v=nlI7a20RPoE&list=PLbi3WiEeXr2wdppQ575zSLbcORou-Lxd1&index=2). There's a high chance your question has already been answered there.
+# This is the main entry point for the GPT Pilot application.
+# It is responsible for initializing the application and starting the main event loop.
+def main():
+    # Create a new instance of the GPT Pilot application.
+    app = GptPilotApp()
 
-        If not, it's best to ask the question [in our community Discord](https://discord.gg/HaqXugmxr9). We have an active and friendly community and you will likely get an answer quicker than if you post here. You can also check our [open issues](https://github.com/Pythagora-io/gpt-pilot/issues/) and see if what you're asking about was already discussed there.
+    # Initialize the application with any necessary configuration or data.
+    app.initialize()
 
-        BTW: If you're wondering how to use GPT Pilot with a local LLM, please check our tutorial here: [Using GPT Pilot with Local LLMs](https://github.com/Pythagora-io/gpt-pilot/wiki/Using-GPT%E2%80%90Pilot-with-Local-LLMs).
-  - type: dropdown
-    id: client
-    attributes:
-      label: Version
-      description: Which version of GPT Pilot are you using?
-      options:
-        - VisualStudio Code extension
-        - Command-line (Python) version
-    validations:
-      required: true
-  - type: dropdown
-    id: os
-    attributes:
-      label: Operating System
-      description: Which operating system are you using?
-      options:
-        - Windows 10
-        - Windows 11
-        - MacOS
-        - Ubuntu Linux
-        - Linux (other)
-    validations:
-      required: true
-  - type: textarea
-    id: question
-    attributes:
-      label: Your question
-      description: Please describe your question in as much detail as possible.
-      placeholder: "How can I do [something] with GPT Pilot? I've checked the FAQ, video tutorials, open issues and Discord and there doesn't seem to be an answer to this."
-    validations:
-      required: true
+    # Start the main event loop for the application.
+    app.start_event_loop()
+
+# This class represents the main application for GPT Pilot.
+# It is responsible for initializing and running the application.
+class GptPilotApp:
+    # Initialize a new instance of the GPT Pilot application.
+    def __init__(self):
+        # Initialize any necessary instance variables.
+        self.window = None
+
+    # Initialize the application with any necessary configuration or data.
+    def initialize(self):
+        # Create the main window for the application.
+        self.window = MainWindow()
+
+        # Load any necessary configuration or data for the application.
+        self.load_configuration()
+
+    # Start the main event loop for the application.
+    def start_event_loop(self):
+        # Run the main event loop for the application.
+        # This will block until the application is closed.
+        qapp.exec_()
+
+# This class represents the main window for the GPT Pilot application.
+# It is responsible for displaying the user interface and handling user input.
+class MainWindow(QMainWindow):
+    # Initialize a new instance of the MainWindow class.
+    def __init__(self):
+        # Initialize the parent class.
+        super().__init__()
+
+        # Set up the user interface for the main window.
+        self.setup_ui()
+
+    # Set up the user interface for the main window.
+    def setup_ui(self):
+        # Create and configure the various widgets and layouts for the main window.
+        # This includes creating menus, toolbars, and dock widgets.
+
+        # Set the main window's title and size.
+        self.setWindowTitle("GPT Pilot")
+        self.resize(800, 600)
+
+        # Create the central widget for the main window.
+        # This will contain the main content area for the application.
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        # Create a vertical layout for the central widget.
+        layout = QVBoxLayout()
+        central_widget.setLayout(layout)
+
+        # Create and add a toolbar to the main window.
+        toolbar = self.addToolBar("Main Toolbar")
+
+        # Create and add a menu bar to the main window.
+        menu_bar = self.menuBar()
+
+        # Create and add a file menu to the menu bar.
+        file_menu = menu_bar.addMenu("File")
+
+        # Add a quit action to the file menu.
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(quit_action)
+
+        # Create and add a status bar to the main window.
+        self.statusBar()
+
+        # Create and add a dock widget to the main window.
+        dock_widget = QDockWidget("Dock Widget", self)
+        dock_widget.
