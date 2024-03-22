@@ -2,6 +2,8 @@ import json
 from typing import Dict, List, Any
 import platform
 
+import warnings
+
 from utils.utils import step_already_finished, should_execute_step, generate_app_data
 from database.database import save_progress, get_progress_steps
 from logger.logger import logger
@@ -10,13 +12,13 @@ from prompts.prompts import ask_user
 from templates import PROJECT_TEMPLATES
 
 ARCHITECTURE_STEP = 'architecture'
-WARN_SYSTEM_DEPS = ["docker", "kubernetes", "microservices"]
-WARN_FRAMEWORKS = ["react", "react.js", "next.js", "vue", "vue.js", "svelte", "angular"]
-WARN_FRAMEWORKS_URL = "https://github.com/Pythagora-io/gpt-pilot/wiki/Using-GPT-Pilot-with-frontend-frameworks"
+SYSTEM_DEP_WARNINGS = ["docker", "kubernetes", "microservices"]
+FRAMEWORK_WARNINGS = ["react", "react.js", "next.js", "vue", "vue.js", "svelte", "angular"]
+FRAMEWORK_WARNINGS_URL = "https://github.com/Pythagora-io/gpt-pilot/wiki/Using-GPT-Pilot-with-frontend-frameworks"
 
-class Architect(Agent):
+class Architect:
     def __init__(self, project):
-        super().__init__('architect', project)
+        self.project = project
         self.convo_architecture = None
 
     def get_architecture(self) -> None:
@@ -33,14 +35,10 @@ class Architect(Agent):
         step = get_progress_steps(self.project.args['app_id'], ARCHITECTURE_STEP)
         if step and not should_execute_step(self.project.args['step'], ARCHITECTURE_STEP):
             step_already_finished(self.project.args, step)
-            self.project.architecture = None
-            self.project.system_dependencies = None
-            self.project.package_dependencies = None
-            self.project.project_template = None
             self._load_db_data(step)
             return
 
-        print(color_green_bold("Planning project architecture...\n"))
+        print(f"Planning project architecture...\n")
         logger.info("Planning project architecture...")
 
         self.convo_architecture = AgentConvo(self)
@@ -54,7 +52,7 @@ class Architect(Agent):
                  'app_type': self.project.args['app_type'],
                  "templates": PROJECT_TEMPLATES,
                 },
-                ARCHITECTURE
+                ARCHITECTURE_STEP
             )
         except Exception as e:
             print(f"Error while generating architecture: {e}", type='error')
@@ -78,25 +76,12 @@ class Architect(Agent):
         """
         Loads data from the database if the step has already been executed.
         """
-        db_data = step["architecture"]
+        db_data = step.get("architecture", {})
         if db_data:
-            if isinstance(db_data, dict):
-                self.project.architecture = db_data["architecture"]
-                self.project.system_dependencies = db_data["system_dependencies"]
-                self.project.package_dependencies = db_data["package_dependencies"]
-                self.project.project_template = db_data.get("project_template")
-            elif isinstance(db_data, list):
-                self.project.architecture = ""
-                self.project.system_dependencies = [
-                    {
-                        "name": dep,
-                        "description": "",
-                        "test": "",
-                        "required_locally": False
-                    } for dep in db_data
-                ]
-                self.project.package_dependencies = []
-                self.project.project_template = None
+            self.project.architecture = db_data.get("architecture", "")
+            self.project.system_dependencies = db_data.get("system_dependencies", [])
+            self.project.package_dependencies = db_data.get("package_dependencies", [])
+            self.project.project_template = db_data.get("project_template", None)
 
     def _update_project_data(self, llm_response: Dict[str, Any]) -> None:
         """
@@ -111,8 +96,14 @@ class Architect(Agent):
         """
         Checks for warnings and displays them to the user.
         """
-        warn_system_deps = [dep["name"] for dep in self.project.system_dependencies if dep["name"].lower() in WARN_SYSTEM_DEPS]
-        warn_package_deps = [dep["name"] for dep in self.project.package_dependencies if dep["name"].lower() in WARN_FRAMEWORKS]
+        warn_system_deps = [dep["name"] for dep in self.project.system_dependencies if dep["name"].lower() in SYSTEM_DEP_WARNINGS]
+        warn_package_deps = [dep["name"] for dep in self.project.package_dependencies if dep["name"].lower() in FRAMEWORK_WARNINGS]
 
-        existing_system_deps = [dep["name"] for dep in self.project.system_dependencies if dep["name"] not in [None, ""]]
-        warn_system_deps = [dep for dep in warn_system_deps if dep not in existing_system_
+        if warn_system_deps:
+            warnings.warn("The following system dependencies were detected and might require additional configuration: " +
+                          ", ".join(warn_system_deps), UserWarning)
+
+        if warn_package_deps:
+            warnings.warn("The following frontend frameworks were detected. "
+                          "Please follow the instructions in the documentation to properly set up the project: " +
+                          FRAMEWORK_WARNINGS_URL, UserWarning)
