@@ -1,26 +1,42 @@
-app_type = input("Enter the type of app: ")
-name = input("Enter the name of the app: ")
-project_details = input("Enter the project details: ")
+app_type = None
+while app_type is None:
+    try:
+        app_type = input("Enter the type of app: ").strip().lower()
+    except ValueError:
+        print("Invalid input. Please enter a string.")
+
+name = input("Enter the name of the app: ").strip()
+project_details = input("Enter the project details: ").strip()
 
 feature_list = []
 feature = ""
 while feature != "done":
-    feature = input("Enter a feature (type 'done' to finish): ")
+    feature = input("Enter a feature (type 'done' to finish): ").strip().lower()
     if feature != "done":
         feature_list.append(feature)
 
-files = input("Have the developers used a project scaffolding tool? (yes/no) ").lower() in ["yes", "y"]
+files_used = None
+while files_used is None:
+    files_answer = input("Have the developers used a project scaffolding tool? (yes/no) ").strip().lower()
+    if files_answer == "yes" or files_answer == "y":
+        files_used = True
+    elif files_answer == "no" or files_answer == "n":
+        files_used = False
+    else:
+        print("Invalid input. Please enter 'yes' or 'no'.")
 
-if files:
-    existing_summary = input("Enter the existing summary: ")
-else:
-    existing_summary = ""
+existing_summary = ""
+if files_used:
+    while not existing_summary:
+        existing_summary = input("Enter the existing summary: ").strip()
 
-project_tasks = input("Enter the project tasks: ")
+project_tasks = input("Enter the project tasks: ").strip()
 
 print(f"App Type: {app_type}")
 print(f"Name: {name}")
 print(f"Project Details:\n{project_details}")
-print(f"Features: {', '.join(feature_list)}")
-print(f"Existing Summary: {existing_summary}")
-print(f"Project Tasks:\n{project_tasks}")
+if feature_list:
+    print(f"Features: {', '.join(feature_list)}")
+if existing_summary:
+    print(f"Existing Summary: {existing_summary}")
+print(f"Project Tasks:\
