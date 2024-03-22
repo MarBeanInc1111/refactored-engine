@@ -1,27 +1,55 @@
-{{ app_type }} "{{ name }}"
+{% set app\_type = "Web Application" %}
+{% set name = "Todo App" %}
+{% set app\_summary = "A simple todo app for managing daily tasks." %}
+{% set features\_list = ["Add task", "Delete task", "Mark task as complete"] %}
+{% set architecture = "The app will have a frontend built with React and a backend built with Node.js." %}
+{% set technologies = [
+  {"name": "React", "description": "A JavaScript library for building user interfaces."},
+  {"name": "Node.js", "description": "A JavaScript runtime for executing server-side code."}
+] %}
+{% set development_tasks = [
+  {"description": "Set up the development environment"},
+  {"description": "Create the project architecture"},
+  {"description": "Implement the app features"}
+] %}
+{% set current_task = development_tasks[1] %}
+{% set files_list = "See the `files` directory for a list of implemented files." %}
+{% set previous_solutions = [
+  {
+    "user_feedback": "The app crashes when trying to add a new task.",
+    "llm_proposal": "It seems like there might be an issue with the task validation. Let's try adding some additional validation to the task input field."
+  },
+  {
+    "user_feedback": "The app is unable to delete tasks.",
+    "llm_proposal": "There might be an issue with the task deletion logic. Let's review the code and ensure that the correct task is being deleted."
+  }
+] %}
+{% set tried_alternative_solutions_to_current_issue = [] %}
+
+<h1>{{ app_type }} "{{ name }}"</h1>
 ==========================
 
-High-level description:
+<h2>High-level description:</h2>
 ----------------------
 {{ app_summary }}
 
-Features:
+<h2>Features:</h2>
 ---------
 {% for feature in features_list %}
 * {{ feature }}
 {% endfor %}
 
-Project architecture:
+<h2>Project architecture:</h2>
 --------------------
 {{ architecture }}
 
-Technologies used:
+<h2>Technologies used:</h2>
 ------------------
 {% for tech in technologies %}
 * {{ tech["name"] }} - {{ tech["description"] }}
 {% endfor %}
 
-Development tasks:
+<h2>Development tasks:</h2>
 -----------------
 {% if development_tasks and current_task %}
 {% for task in development_tasks %}
@@ -33,54 +61,20 @@ Development tasks:
 {% endfor %}
 {% endif %}
 
-Implemented files:
+<h2>Implemented files:</h2>
 ------------------
 {{ files_list }}
 
-Issue report:
+<h2>Issue report:</h2>
 ------------
 Your colleague has reported an issue that has been unsuccessfully attempted to be resolved {{ previous_solutions|length }} times.
 
 {% if tried_alternative_solutions_to_current_issue|length > 0 %}
-Alternative solutions tried:
+<h3>Alternative solutions tried:</h3>
 {% for solution in tried_alternative_solutions_to_current_issue %}
 ----------------------------start_of_solution_{{ loop.index }}----------------------------
 {{ solution }}
 ----------------------------end_of_solution_{{ loop.index }}----------------------------
 {% endfor %}
 {% elif previous_solutions|length > 0 %}
-First report:
-{% for solution in previous_solutions %}
-----------------------------start_of_report_{{ loop.index }}----------------------------
-{{ solution['user_feedback'] }}
-----------------------------end_of_report_{{ loop.index }}----------------------------
 
-Proposed solution:
-------------------
-{{ solution['llm_proposal'] }}
-----------------------------end_of_of_proposal_{{ loop.index }}----------------------------
-
-{% if loop.index < previous_solutions|length %}
-Second report:
-{% endif %}
-{% endfor %}
-{% endif %}
-
-{% if user_input != '' %}
-Current report:
-
-
-
-It seems that the previous solutions proposed aren't working. Here are 5 alternative solutions to get this code to work:
-
-1. Solution 1:
-
-
-[Insert concrete solution here]
-
-3. Solution 3:
-
-
-[Insert concrete solution here]
-
-5. Solution 5:
