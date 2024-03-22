@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 from uuid import uuid4
 
 from utils.style import color_green_bold
@@ -31,7 +31,8 @@ def render_and_save_files(
 
     for file_name, file_content in files.items():
         full_path = os.path.join(root_path, file_name)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        if not os.path.exists(os.path.dirname(full_path)):
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
         try:
             with open(full_path, "w", encoding="utf-8") as f:
                 f.write(file_content)
@@ -75,24 +76,4 @@ def apply_project_template(
         project_description,
         root_path,
         random_secret,
-    )
 
-    print(color_green_bold(f"Applying project template {template['description']}...\n"))
-    logger.info(f"Applying project template {template_name}...")
-
-    last_development_step = project.checkpoints.get('last_development_step')
-    if last_development_step:
-        project.save_files_snapshot(last_development_step['id'])
-
-    try:
-        if install_hook:
-            install_hook(project)
-    except Exception as err:
-        logger.info(
-            f"Error running install hook for project template '{template_name}': {err}",
-            exc_info=True,
-        )
-
-    trace_code_event('project-template', {'template': template_name})
-    summary = f"The code so far includes:\n{template['summary']}"
-    return summary
