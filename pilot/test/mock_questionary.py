@@ -36,7 +36,10 @@ class MockQuestionary:
 
         :return: The user's answer
         """
-        return self.unsafe_ask()
+        try:
+            return next(self.answers)
+        except StopIteration:
+            raise ValueError("No more answers available")
 
     def unsafe_ask(self) -> str:
         """
@@ -45,4 +48,14 @@ class MockQuestionary:
         :return: The user's answer
         """
         if self.state == 'user_stories':
+            return next(self.answers)
 
+    def reset(self) -> 'MockQuestionary':
+        """
+        Reset the questionary to its initial state.
+
+        :return: The MockQuestionary object
+        """
+        self.answers = iter(self.answers)
+        self.state = 'project_description'
+        return self
