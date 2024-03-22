@@ -1,21 +1,35 @@
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "My app description",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
+
+
+
 const express = require('express');
 const app = express();
-
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
 
-
-app.listen(3000, () => {
-  console.log('Example app listening on port 3000!');
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
 
 
-"start": "node index.js"
 
+npm install
 
-npm install express
 
 
 npm start
+
