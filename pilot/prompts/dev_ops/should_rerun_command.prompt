@@ -1,10 +1,10 @@
-{% if command_should_be_rerun %}
+{% set show_running_processes = command\_should\_be\_rerun and running\_processes|length > 0 %}
+
+{% if show_running_processes %}
 YES
-{% else %}
-NO
-{% endif %}
 
 {% for process in running_processes %}
-{{ process }}
+- {{ process }}
 {% endfor %}
+{% endif %}
 
