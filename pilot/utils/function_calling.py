@@ -39,16 +39,14 @@ def add_function_calls_to_request(gpt_data: Dict[str, Any], function_calls: Opti
 
     gpt_data['functions'] = function_calls['definitions']
 
-    prompter = JsonPrompter(is_instruct)
-
-    function_call = (function_calls['definitions'][0]['name'] if len(function_calls['definitions']) == 1 else None)
-
-    function_call_message = {
-        'role': 'user',
-        'content': prompter.prompt('', function_calls['definitions'], function_call)
-    }
-
-    gpt_data['messages'].append(function_call_message)
+    if is_instruct and function_calls['definitions']:
+        first_function = function_calls['definitions'][0]
+        function_call_message = {
+            'role': 'function',
+            'name': first_function['name'],
+            'arguments': json.dumps(first_function['parameters']['properties']),
+        }
+        gpt_data['messages'].append(function_call_message)
 
     return function_call_message
 
@@ -78,17 +76,17 @@ class JsonPrompter:
             if function["name"] == function_to_call and "description" in function
         ]
 
-    def function_parameters(self, functions: List[FunctionType], function_to_call: str) -> str:
+    def function_parameters(self, function: FunctionType) -> str:
         """Get the parameters of the function."""
-        return json.dumps(next((function["parameters"]["properties"] for function in functions if function["name"] == function_to_call), {}), indent=4)
+        return json.dumps(function["parameters"]["properties"], indent=4)
 
-    def function_data(self, functions: List[FunctionType], function_to_call: str) -> str:
+    def function_data(self, function: FunctionType) -> str:
         """Get the data for the function."""
         return "\n".join(
             [
                 "Here is the schema for the expected JSON object:",
                 "```json",
-                self.function_parameters(functions, function_to_call),
+                self.function_parameters(function),
                 "```",
             ]
         )
@@ -109,9 +107,9 @@ class JsonPrompter:
                 if descriptions:
                     prompt += "\n\n" + "\n".join(descriptions)
 
-                parameters = self.function_parameters(functions, function_to_call)
+                parameters = self.function_parameters(functions[0])
                 if parameters:
-                    prompt += "\n\n" + self.function_data(functions, function_to_call)
+                    prompt += "\n\n" + self.function_data(functions[0])
 
         return prompt
 
