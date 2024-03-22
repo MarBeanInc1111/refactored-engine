@@ -2,8 +2,6 @@ import platform
 import uuid
 import re
 import json
-from typing import Any, Dict, List, Optional
-
 from const.messages import WHEN_USER_DONE, AFFIRMATIVE_ANSWERS, NEGATIVE_ANSWERS, STUCK_IN_LOOP, NONE_OF_THESE
 from utils.exit import trace_code_event
 from utils.style import (
@@ -34,7 +32,6 @@ from utils.print import print_task_progress, print_step_progress
 
 ENVIRONMENT_SETUP_STEP = 'environment_setup'
 
-
 class Developer(Agent):
     def __init__(self, project):
         super().__init__('full_stack_developer', project)
@@ -44,6 +41,9 @@ class Developer(Agent):
         self.debugger = Debugger(self)
 
     def start_coding(self, task_source):
+        """
+        Starts the development process for the project.
+        """
         print('Starting development...', type='verbose', category='agent:developer')
         if not self.project.finished:
             self.project.current_step = 'coding'
@@ -74,13 +74,3 @@ class Developer(Agent):
                     continue
                 else:
                     readme_dev_step = next((el for el in self.project.dev_steps_to_load if
-                                           'create_readme.prompt' in el.get('prompt_path', '')), None)
-
-                    if len(self.project.development_plan) - 1 == i and readme_dev_step is not None:
-                        self.project.cleanup_list('dev_steps_to_load', readme_dev_step['id'])
-                        continue
-
-            self.project.current_task.start_new_task(dev_task['description'], i + 1)
-            print_task_progress(i+1, len(self.project.development_plan), dev_task['description'], task_source, 'in_progress')
-            self.implement_task(i, task_source, dev_task)
-            print_task_progress(i+1, len(self.project.development_plan), dev_task['description'], task_
