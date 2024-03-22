@@ -1,5 +1,5 @@
-from unittest.mock import patch
 import uuid
+from unittest.mock import patch
 from utils.telemetry import Telemetry, DEFAULT_ENDPOINT
 
 @patch("utils.telemetry.settings")
