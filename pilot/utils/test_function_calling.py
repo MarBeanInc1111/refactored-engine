@@ -38,35 +38,25 @@ class TestFunctionCalling:
 def test_json_prompter():
     prompter = JsonPrompter()
     prompt = prompter.prompt('Create a web-based chat app', ARCHITECTURE['definitions'])
-    assert prompt == '''Help choose the appropriate function to call to answer the user's question.
+    expected_prompt = '''Help choose the appropriate function to call to answer the user's question.
 You must respond with ONLY the JSON object, with NO additional text or explanation.
 
-Available functions:
-- process_architecture - Get architecture and the list of system dependencies required for the project.
-
-Create a web-based chat app'''
+Available functions:\n- process_architecture - Get architecture and the list of system dependencies required for the project.'''
+    assert prompt == expected_prompt
 
 def test_llama_json_prompter():
     prompter = JsonPrompter(is_instruct=True)
     prompt = prompter.prompt('Create a web-based chat app', ARCHITECTURE['definitions'])
-    assert prompt == '''[INST] <<SYS>»
-Help choose the appropriate function to call to answer the user's question.
+    expected_prompt = '''[INST] Help choose the appropriate function to call to answer the user's question.
 You must respond with ONLY the JSON object, with NO additional text or explanation.
 
-Available functions:
-- process_architecture - Get architecture and the list of system dependencies required for the project.
-<</SYS>»
+Available functions:\n- process_architecture - Get architecture and the list of system dependencies required for the project.<</SYS>»
 
 Create a web-based chat app'''
+    assert prompt == expected_prompt
 
 def test_json_prompter_named():
     prompter = JsonPrompter()
     prompt = prompter.prompt('Create a web-based chat app', USER_TASKS['definitions'], 'process_user_tasks')
-    assert prompt == '''**IMPORTANT**
-You must respond with ONLY the JSON object, with NO additional text or explanation.
-
-Here is the schema for the expected JSON object:
-
-
-
-Create a web-based chat app'''
+    expected_prompt = '''**IMPORTANT**\nYou must respond with ONLY the JSON object, with NO additional text or explanation.\n\nHere is the schema for the expected JSON object:\n\n\nCreate a web-based chat app'''
+    assert prompt == expected_prompt
