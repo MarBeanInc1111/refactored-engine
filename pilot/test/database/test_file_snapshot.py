@@ -39,15 +39,8 @@ def db() -> SqliteDatabase | PostgresqlDatabase:
     database_teardown(db)
 
 
-@pytest.fixture
-def user_app_step(db) -> tuple[User, App, DevelopmentSteps]:
-    user = User.create(email="", password="")
-    app = App.create(user=user)
-    step = DevelopmentSteps.create(app=app, llm_response={})
-    return user, app, step
-
-
-def test_create_tables(db: SqliteDatabase | PostgresqlDatabase) -> None:
+@pytest.mark.usefixtures("db")
+def test_create_tables() -> None:
     """
     Test that database tables are created for all the models.
     """
@@ -56,7 +49,8 @@ def test_create_tables(db: SqliteDatabase | PostgresqlDatabase) -> None:
     assert set(tables) == set(expected_tables)
 
 
-def test_create_user(db: SqliteDatabase | PostgresqlDatabase) -> None:
+@pytest.mark.usefixtures("db")
+def test_create_user(user: User) -> None:
     """
     Test that a user can be created.
     """
@@ -65,7 +59,8 @@ def test_create_user(db: SqliteDatabase | PostgresqlDatabase) -> None:
     assert from_db.email == "test@example.com"
 
 
-def test_create_app(db: SqliteDatabase | PostgresqlDatabase, user: User) -> None:
+@pytest.mark.usefixtures("db")
+def test_create_app(app: App, user: User) -> None:
     """
     Test that an app can be created for a user.
     """
@@ -74,9 +69,8 @@ def test_create_app(db: SqliteDatabase | PostgresqlDatabase, user: User) -> None
     assert from_db.user == user
 
 
-def test_create_development_step(
-    db: SqliteDatabase | PostgresqlDatabase, app: App
-) -> None:
+@pytest.mark.usefixtures("db")
+def test_create_development_step(step: DevelopmentSteps, app: App) -> None:
     """
     Test that a development step can be created for an app.
     """
@@ -85,9 +79,8 @@ def test_create_development_step(
     assert from_db.app == app
 
 
-def test_create_file(
-    db: SqliteDatabase | PostgresqlDatabase, app: App
-) -> None:
+@pytest.mark.usefixtures("db")
+def test_create_file(file: File, app: App) -> None:
     """
     Test that a file can be created for an app.
     """
@@ -104,8 +97,8 @@ def test_create_file(
         ("with null byte \0", "with null byte \0"),
     ],
 )
+@pytest.mark.usefixtures("db")
 def test_file_snapshot_text(
-    db: SqliteDatabase | PostgresqlDatabase,
     user_app_step: tuple[User, App, DevelopmentSteps],
     content: str,
     expected_content: str,
@@ -123,5 +116,5 @@ def test_file_snapshot_text(
     assert from_db.content == expected_content
 
 
+@pytest.mark.usefixtures("db")
 def test_file_snapshot_binary(
-    db
