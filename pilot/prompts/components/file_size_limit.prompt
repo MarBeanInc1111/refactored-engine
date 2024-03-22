@@ -1,3 +1,52 @@
 # ------------------------------------------------------------------------------
 # IMPORTANT: File Organization
 # ------------------------------------------------
+
+# Import necessary libraries and modules here
+
+# ------------------------------------------------------------------------------
+# IMPORTANT: Global Variables
+# --------------------------------
+
+# Define any global variables or constants here
+
+# ------------------------------------------------------------------------------
+# FUNCTIONS: Core Functions
+# --------------------------------
+
+def function_1():
+    """
+    This function does something.
+    """
+    # Function implementation here
+
+def function_2():
+    """
+    This function does something else.
+    """
+    # Function implementation here
+
+# ------------------------------------------------------------------------------
+# FUNCTIONS: Helper Functions
+# --------------------------------
+
+def helper_function_1():
+    """
+    This function helps the core functions.
+    """
+    # Function implementation here
+
+def helper_function_2():
+    """
+    This function also helps the core functions.
+    """
+    # Function implementation here
+
+# ------------------------------------------------------------------------------
+# MAIN PROGRAM
+# --------------------------------
+
+if __name__ == "__main__":
+    # Call the core functions here
+    function_1()
+    function_2()
