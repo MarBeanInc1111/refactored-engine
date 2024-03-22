@@ -1,3 +1,13 @@
--- INSTRUCTIONS --
-<instructions>
--- END OF INSTRUCTIONS --
+-- Function to calculate the power of a number
+function power(base, exponent)
+  -- Calculate the result of the base raised to the power of the exponent
+  local result = base ^ exponent
+
+  -- Return the result
+  return result
+end
+
+-- Test the function with some example inputs
+print(power(2, 3)) -- Should print 8
+print(power(3, 4)) -- Should print 81
+print(power(5, 2)) -- Should print 25
