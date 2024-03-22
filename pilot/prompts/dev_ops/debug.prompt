@@ -1,2 +1,33 @@
-{{ command }}
+# This is a Python code that takes a command as input and runs it using the os.system() function.
+# It also handles exceptions in case the command is not valid or cannot be executed.
+
+import os
+
+def run_command(command):
+    """
+    Runs the given command using the os.system() function.
+
+    Args:
+    - command (str): The command to be executed.
+
+    Returns:
+    - None
+    """
+
+    try:
+        # Run the command and capture the output.
+        output = os.system(command)
+
+        # Check if the command was executed successfully.
+        if output != 0:
+            # If the command failed, raise an exception.
+            raise Exception(f"Command '{command}' failed with exit code {output}.")
+
+    except Exception as e:
+        # Print the error message and exit the program.
+        print(f"Error: {e}")
+        exit(1)
+
+# Example usage:
+run_command("echo 'Hello, world!'")
 
