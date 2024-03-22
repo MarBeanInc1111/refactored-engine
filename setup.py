@@ -1,11 +1,13 @@
 # Import the necessary modules for building and packaging the Python module
-from setuptools import setup
+import os
+from setuptools import setup, find_packages
 
 # Define the current version of the package
 VERSION = "0.1.5"
 
 # Read the list of requirements from the requirements.txt file
-requirements = open("requirements.txt", encoding="utf-8").readlines()
+here = os.path.abspath(os.path.dirname(__file__))
+requirements = open(os.path.join(here, "requirements.txt"), encoding="utf-8").readlines()
 
 # Check if the script is being run as the main program
 if __name__ == "__main__":
@@ -16,7 +18,7 @@ if __name__ == "__main__":
         # Define the version of the package
         version=VERSION,
         # Define the package directory
-        packages=['pilot'],
+        packages=find_packages(),
         # Define the URL for the package
         url='https://www.pythagora.ai',
         # Define the license for the package
