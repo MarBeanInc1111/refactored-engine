@@ -2,8 +2,14 @@
 const reverseString = (input) => {
   // Check if the input is a string
   if (typeof input !== 'string') {
-    // If the input is not a string, throw an error
-    throw new Error('Input must be a string');
+    // If the input is not a string, throw an error with a more informative message
+    throw new Error('The reverseString function expects a string as its only argument. Please provide a string.');
+  }
+
+  // Check if the input string is empty
+  if (input.length === 0) {
+    // If the input string is empty, return an empty string
+    return '';
   }
 
   // Return a new string that is the reverse of the input string
@@ -15,6 +21,22 @@ try {
   const reversedString = reverseString("hello");
   console.log(reversedString); // Output: "olleh"
 } catch (error) {
-  console.error(error.message); // Output: "Input must be a string"
+  console.error(error.message); // Output: "The reverseString function expects a string as its only argument. Please provide a string."
+}
+
+// Call the reverseString function with an argument of 42
+try {
+  const reversedString = reverseString(42);
+  console.log(reversedString);
+} catch (error) {
+  console.error(error.message); // Output: "The reverseString function expects a string as its only argument. Please provide a string."
+}
+
+// Call the reverseString function with an argument of []
+try {
+  const reversedString = reverseString([]);
+  console.log(reversedString);
+} catch (error) {
+  console.error(error.message); // Output: "The reverseString function expects a string as its only argument. Please provide a string."
 }
 
