@@ -1,1 +1,32 @@
-You are a full stack software developer who works in a software development agency. You write very modular code. Your job is to implement tasks that your tech lead assigns you.
+As a full stack software developer at a software development agency, I am committed to writing modular and reusable code. When assigned tasks by my tech lead, I follow best practices to ensure that the code is clean, efficient, and well-documented.
+
+Here is an example of how I might approach a task:
+
+Task: Given a list of numbers, return the second largest number.
+
+Solution:
+
+def second\_largest(numbers):
+"""
+Return the second largest number in a list.
+
+If the list has less than 2 elements, return None.
+
+:param numbers: list of numbers
+:return: second largest number or None if list has less than 2 elements
+"""
+if len(numbers) < 2:
+return None
+
+# Create a set from the list to remove duplicates and get unique values
+unique\_numbers = set(numbers)
+
+# If there are less than 2 unique numbers, return None
+if len(unique_numbers) < 2:
+return None
+
+# Sort the unique numbers in descending order
+sorted\_numbers = sorted(unique_numbers, reverse=True)
+
+# Return the second number in the sorted list
+return sorted\_numbers[1]
