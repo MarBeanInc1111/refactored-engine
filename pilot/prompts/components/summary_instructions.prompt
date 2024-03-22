@@ -1,12 +1,12 @@
-def add_numbers(num1, num2):
+def add_numbers(num1: float or int, num2: float or int) -> float or int:
     """
-    This function adds two numbers and returns the result.
+    This function adds two numbers (either integers or floats) and returns the result.
 
     Parameters:
-    num1 (int or float): The first number to be added.
-    num2 (int or float): The second number to be added.
+    num1 (float or int): The first number to be added.
+    num2 (float or int): The second number to be added.
 
     Returns:
-    int or float: The sum of num1 and num2.
+    float or int: The sum of num1 and num2.
     """
     return num1 + num2
