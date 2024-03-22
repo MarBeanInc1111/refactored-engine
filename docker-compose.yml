@@ -1,32 +1,17 @@
 version: '3'
 
+networks:
+  my-network:
+    driver: bridge
+
 services:
   gpt-pilot:
+    networks:
+      - my-network
     environment:
       # Common
-      - MAX_TOKENS=8192
-      - DATABASE_TYPE=postgres
-      - DB_NAME=pilot
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      # OpenAI
-      - ENDPOINT=OPENAI
-      - OPENAI_API_KEY={your_openai_api_key}
-      - MODEL_NAME=gpt-4
-      # Azure
-      # - ENDPOINT=AZURE
-      # - AZURE_API_KEY={your_azure_api_key}
-      # - AZURE_ENDPOINT={your_azure_endpoint}
-      # - MODEL_NAME={your_azure_model_name}
-      # OpenRouter
-      # - ENDPOINT=OPENROUTER
-      # - OPENROUTER_API_KEY={your_openrouter_api_key}
-      # Folders which shouldn't be tracked in workspace (useful to ignore folders created by compiler)
-      # IGNORE_PATHS=folder1,folder2
-    volumes:
-      - ~/gpt-pilot-workspace:/usr/src/app/workspace
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "7681:768
+      MAX_TOKENS: 8192
+      DATABASE_TYPE: postgres
+      DB_NAME: pilot
+      DB_HOST: postgres
+      DB_PORT: 543
