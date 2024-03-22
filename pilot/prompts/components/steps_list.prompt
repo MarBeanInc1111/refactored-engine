@@ -1,5 +1,6 @@
 {% set batch_index = step_index|default(0) %}
-{% if task_steps %}
+
+{% if task_steps is defined and task_steps is not empty %}
   <p>
     The current task has been split into multiple steps, and each step is one of the following:
     <ul>
@@ -14,31 +15,30 @@
       Previous steps:<br>
       {% set batch = task_steps|slice(0, batch_index)|batch_size(batch_index, 1) %}
       {% for step in batch %}
-        {% if step|selectattr("type", "in", ["save_file", "code_change", "modify_file"]) %}
+        {% if step.type in ["save_file", "code_change", "modify_file"] %}
           {% set step = step|default({"content": "...", "code_change_description": "..."}) %}
-          {{ step|map({"type": "type", "content": "content", "code_change_description": "code_change_description"})|join(": ") }}<br>
+          {{ step.type }}: {{ step.content }} {% if step.type == 'code_change' %} - {{ step.code_change_description }}{% endif %}<br>
         {% endif %}
       {% endfor %}
     {% endif %}
 
     Current step:<br>
     {% set step = task_steps[batch_index] %}
-    {% if step|selectattr("type", "in", ["save_file", "code_change", "modify_file"]) %}
+    {% if step.type in ["save_file", "code_change", "modify_file"] %}
       {% set step = step|default({"content": "...", "code_change_description": "..."}) %}
-      {{ step|map({"type": "type", "content": "content", "code_change_description": "code_change_description"})|join(": ") }}<br>
+      {{ step.type }}: {{ step.content }} {% if step.type == 'code_change' %} - {{ step.code_change_description }}{% endif %}<br>
     {% endif %}
   </p>
 
   <p>
     {% if batch_index < task_steps|length - 1 %}
       Future steps:<br>
-      {% set batch = task_steps|slice(batch_index + 1)|batch_size(task_steps|length - batch_index - 1, 1) %}
+      {% set batch = task_steps[batch_index + 1]: task_steps|length - 1 %}
       {% for step in batch %}
-        {% if step|selectattr("type", "in", ["save_file", "code_change", "modify_file"]) %}
+        {% if step.type in ["save_file", "code_change", "modify_file"] %}
           {% set step = step|default({"content": "...", "code_change_description": "..."}) %}
-          {{ step|map({"type": "type", "content": "content", "code_change_description": "code_change_description"})|join(": ") }}<br>
+          {{ step.type }}: {{ step.content }} {% if step.type == 'code_change' %} - {{ step.code_change_description }}{% endif %}<br>
         {% endif %}
       {% endfor %}
     {% endif %}
-  </p>
-{% endif %}
+  </p
