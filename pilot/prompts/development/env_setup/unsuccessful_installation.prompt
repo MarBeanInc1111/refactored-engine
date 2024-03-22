@@ -1,16 +1,19 @@
 # Attempt to install the desired technology on the user's machine.
 try:
     # If the installation command was successful, move on to the next step.
-    print("Installing " + technology + "...")
-    !pip install {{ technology }}
-    print(technology + " has been installed successfully.")
+    print(f"Installing {technology}...")
+    !pip install {technology}
+    print(f"{technology} has been installed successfully.")
 
 # If the installation command was not successful, try running this command to troubleshoot the issue.
-except:
-    print("The installation of " + technology + " was not successful. Trying to fix the issue...")
+except Exception as e:
+    print(f"The installation of {technology} was not successful. Trying to fix the issue...")
     !pip install --upgrade pip
-    !pip install {{ technology }}
-    print(technology + " has been installed successfully.")
+    try:
+        !pip install {technology}
+        print(f"{technology} has been installed successfully.")
+    except Exception as e:
+        print(f"Could not install {technology}. Error: {e}")
 
 # Prompt the user for the next command.
-print("Tell me the next command that you need me to run to use " + technology + ".")
+print(f"Tell me the next command that you need me to run to use {technology}.")
