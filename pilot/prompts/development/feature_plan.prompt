@@ -12,27 +12,52 @@ class NewFeatureHandler {
     // Make sure to handle any errors or exceptions that may occur
     try {
       // ...
+      return result;
     } catch (error) {
       // Handle the error and log a message for debugging purposes
       console.error(error);
+      throw error; // rethrow the error to let the caller know something went wrong
     }
   }
 }
 
 // Update the existing code to integrate with the new feature
-existingFunction() {
+function existingFunction() {
   // Use the new feature handler to process new requests
   const handler = new NewFeatureHandler();
-  handler.processRequest();
+  try {
+    const result = handler.processRequest();
+    // do something with the result
+  } catch (error) {
+    // Handle the error and log a message for debugging purposes
+    console.error('An error occurred while processing the new feature request:', error);
+  }
 }
 
 // Write unit tests to ensure the new feature is working correctly
 describe('NewFeatureHandler', () => {
+  let handler;
+
+  beforeEach(() => {
+    // Initialize the handler before each test
+    handler = new NewFeatureHandler();
+  });
+
   it('should process new feature requests correctly', () => {
     // Set up any necessary test data here
 
     // Call the processRequest method and verify that it returns the expected result
-    const result = new NewFeatureHandler().processRequest();
+    const result = handler.processRequest();
     expect(result).toEqual(expectedResult);
   });
-});
+
+  it('should handle errors correctly', () => {
+    // Spy on the console.error method to make sure it was called with the correct error message
+    const consoleErrorSpy = jest.spyOn(console, 'error');
+
+    // Simulate an error in the processRequest method
+    handler.processRequest = jest.fn(() => {
+      throw new Error('Something went wrong');
+    });
+
+    // Call the processRequest method and make sure it throws an
