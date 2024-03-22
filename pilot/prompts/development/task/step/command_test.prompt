@@ -1,2 +1,27 @@
-Write a list of commands that should be ran that will tell you if the implementation was successful. Write them in a JSON array where each item is a string with the following format:
-COMMAND: {command_that_needs_to_be_ran}
+#!/bin/bash
+
+# List of commands to check if the implementation was successful
+commands=([
+  "SERVICE_NAME: nginx"
+  "COMMAND: systemctl is-active --quiet $SERVICE_NAME"
+  "EXPECTED_OUTPUT: 0"
+])
+
+# Loop through the commands and execute them
+for i in "${commands[@]}"; do
+  command_parts=($i)
+  service_name=${command_parts[1]}
+  command_to_run=${command_parts[2]}
+  expected_output=${command_parts[3]}
+
+  # Execute the command and store the output
+  output=$(eval $command_to_run)
+
+  # Check if the output matches the expected output
+  if [ "$output" != "$expected_output" ]; then
+    echo "Command '$command_to_run' failed with output '$output'. Expected output was '$expected_output'."
+    exit 1
+  fi
+done
+
+echo "All commands were successful."
