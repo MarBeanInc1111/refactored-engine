@@ -1,17 +1,53 @@
-# This code is designed to execute a command and determine if it was successful or not.
-# It takes into account previous and subsequent steps to ensure that a command
-# that may have initially failed was actually successful in the context of the overall process.
+# This code executes a command and checks if it was successful or not, taking into account
+# previous and subsequent steps in the overall process.
 
-# The 'steps_list' variable is used to keep track of the steps that have been executed.
-# The 'task_steps' and 'step_index' variables are used to determine if the current command
-# is in the middle of a sequence of steps.
+# The 'execution_steps' list keeps track of the steps that have been executed.
+# The 'current_task_step' and 'step_index' variables determine if the current command
+ is in a sequence of steps.
 
-# The 'additional_message' variable can be used to provide any extra information or context
-# that might be helpful in determining if the command was successful.
+# The 'additional_info' variable provides extra context for determining command success.
 
-# The 'command' variable contains the command that will be executed.
-# The 'cli_response' variable will store the output of the command.
+# The 'command_to_execute' variable stores the command to be executed.
+# The 'command_output' variable holds the output of the command.
 
-# The 'error_response' variable is used to indicate if there was an error when executing the command.
+# The 'error_occurred' variable indicates if there was an error executing the command.
 
-# The code will respond with 'DONE' if the command was successful, or 'BUG' if it was not.
+# The code responds with 'DONE' if the command was successful, or 'BUG' if it was not.
+
+execution_steps = []
+current_task_step = None
+step_index = None
+additional_info = None
+
+def execute_command(command_to_execute):
+    error_occurred = False
+    command_output = None
+
+    try:
+        command_output = subprocess.run(
+            command_to_execute,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            universal_newlines=True,
+        )
+    except subprocess.CalledProcessError as e:
+        error_occurred = True
+        command_output = e.output
+
+    return command_output, error_occurred
+
+def check_command_success(command_output, error_occurred, additional_info=None):
+    if error_occurred:
+        print(f"BUG: Command execution failed with error: {command_output}")
+        return False
+
+    if command_output is None or command_output.strip() == "":
+        print(f"BUG: Command execution produced no output: {additional_info}")
+        return False
+
+    print(f"DONE: Command executed successfully: {additional_info}")
+    return True
+
+def main
