@@ -36,6 +36,16 @@ def find_repo_root() -> str:
         return None
     return dir
 
+def zip_files(zip_file, folder, include):
+    """
+    Zips the files in the include list from the given folder.
+    """
+    for root, _, files in os.walk(folder):
+        for file in files:
+            if file in include:
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, folder)
+                zip_file.write(full_path, rel_path)
 
 def main():
     repo_dir = find_repo_root()
@@ -65,12 +75,7 @@ def main():
             os.remove(archive_path)
 
         with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            for root, _, files in os.walk(tmp_dir):
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    if full_path != temp_archive_path:
-                        rel_path = os.path.relpath(full_path, tmp_dir)
-                        zip_file.write(full_path, rel_path)
+            zip_files(zip_file, tmp_dir, INCLUDE)
 
         print(f"Created: {archive_path}")
 
