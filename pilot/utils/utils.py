@@ -1,4 +1,4 @@
-# utils/utils.py (v2)
+# utils/utils.py (v3)
 
 import os
 import platform
@@ -12,6 +12,7 @@ from const.llm import MAX_QUESTIONS, END_RESPONSE
 from const.common import ROLES, STEPS
 from logger.logger import logger
 from .style import color_green
+from datetime import datetime
 
 prompts_path = os.path.join(os.path.dirname(__file__), '..', 'prompts')
 file_loader = FileSystemLoader(prompts_path)
@@ -71,17 +72,16 @@ def get_os_info():
         "Architecture": platform.architecture()[0],
         "Machine": platform.machine(),
         "Node": platform.node(),
-        "Release": platform.release(),
     }
 
     if os_info["OS"] == "Linux":
         os_info["Distribution"] = distro.name(pretty=True)
     elif os_info["OS"] == "Windows":
-        os_info["Win32 Version"] = ' '.join(platform.win32_ver())
-    elif os_info["OS"] == "Mac":
-        os_info["Mac Version"] = platform.mac_ver()[0]
+        os_info["Win32"] = platform.win32_ver()
+    elif os_info["OS"] == "Darwin":
+        os_info["Mac"] = platform.mac_ver()[0]
 
-    return array_of_objects_to_string(os_info)
+    return os_info
 
 def should_execute_step(arg_step, current_step):
     arg_step_index = STEPS.index(arg_step) if arg_step in STEPS else None
