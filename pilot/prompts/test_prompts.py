@@ -1,9 +1,11 @@
+from typing import Dict, Any
+
 from .prompts import get_prompt
 
 def test_prompt_ran_command():
     """Test that the ran_command prompt is generated correctly for different exit codes."""
 
-    def _assert_ran_command_prompt(exit_code):
+    def _assert_ran_command_prompt(exit_code: int or None):
         # Given
         cli_response = 'stdout:\n```\nsuccess\n```'
         command = './scripts/run_tests'
@@ -20,9 +22,9 @@ def test_prompt_ran_command():
         # Then
         expected_prompt = get_expected_ran_command_prompt(cli_response, command, additional_message)
         if exit_code is None:
-            assert prompt == expected_prompt + "BUG\n", f"Expected: {expected_prompt + 'BUG\n'}\nActual: {prompt}"
+            assert prompt == expected_prompt + "BUG\n", f"Expected: {expected_prompt + 'BUG\n'}\nActual: {prompt}\nPrompt does not end with 'BUG' as expected."
         else:
-            assert prompt == expected_prompt + "DONE\n", f"Expected: {expected_prompt + 'DONE\n'}\nActual: {prompt}"
+            assert prompt == expected_prompt + "DONE\n", f"Expected: {expected_prompt + 'DONE\n'}\nActual: {prompt}\nPrompt does not end with 'DONE' as expected."
 
     def get_expected_ran_command_prompt(cli_response, command, additional_message):
         return (
@@ -50,4 +52,5 @@ def test_parse_task_no_processes():
     })
 
     # Then
-    assert 'the following processes' not in prompt, f"Expected: 'the following processes' not in prompt
+    assert 'the following processes' not in prompt, f"Expected: 'the following processes' not in prompt\nActual: {prompt}"
+    assert 'No running processes' in prompt, f"Expected: 'No running processes' in prompt\n
