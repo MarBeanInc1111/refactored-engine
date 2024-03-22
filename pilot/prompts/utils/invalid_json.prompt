@@ -1,3 +1,25 @@
-The JSON response is invalid according to the provided schema. Specifically, {{ invalid_reason }}.
+import json
+from jsonschema import validate, ValidationError
 
-Please provide a valid JSON object that adheres to the schema. Remember that preambles, such as "I'm sorry for the confusion," are not allowed.
+def validate_json(json_data, json_schema):
+    try:
+        validate(instance=json_data, schema=json_schema)
+        return "The JSON object is valid."
+    except ValidationError as e:
+        return f"The JSON response is invalid according to the provided schema.\nSpecifically, {e.message}\nPlease provide a valid JSON object that adheres to the schema."
+
+# Example usage:
+
+json_schema = {
+    "type" : "object",
+    "properties" : {
+        "price" : {"type" : "number"},
+        "name" : {"type" : "string"},
+    },
+}
+
+json_data = '{"name": "Product", "price": 15.99}'
+
+json_data_valid = json.loads(json_data)
+
+print(validate_json(json_data_valid, json_schema))
