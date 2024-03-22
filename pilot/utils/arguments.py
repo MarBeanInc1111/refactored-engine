@@ -45,8 +45,9 @@ def get_arguments() -> dict:
     style_config.set_theme(theme=theme_mapping.get(arguments['theme'], style_config.theme.DARK))
 
     # Set user_id
-    if arguments['user_id'] is None:
-        arguments['user_id'] = username_to_uuid(getuser())
+    if arguments['app_id'] is not None:
+        if arguments['user_id'] is None:
+            arguments['user_id'] = username_to_uuid(getuser())
 
     # Set app
     if arguments['workspace'] is not None:
@@ -76,6 +77,14 @@ def validate_arguments(arguments: dict) -> None:
         if arguments[arg] is None:
             print_error(f'Error: Required argument {arg} is missing.')
             sys.exit(-1)
+
+    if arguments['step'] not in [None, 'all', *STEPS]:
+        print_error(f'Error: Invalid argument --step={arguments["step"]}.')
+        sys.exit(-1)
+
+    if arguments['theme'] not in ['light', 'dark']:
+        print_error(f'Error: Invalid argument --theme={arguments["theme"]}.')
+        sys.exit(-1)
 
 def print_usage() -> None:
     print('Usage: python script.py [options]')
@@ -125,13 +134,4 @@ def get_next_step(arguments: dict) -> str:
         return STEPS[STEPS.index('created') + 1]
     return 'finished'
 
-def print_banner() -> None:
-    print_separator()
-    print_loading('Loading project...')
-    print_loading('Initializing environment...')
-    print_loading('Setting up configuration...')
-    print_loading('Checking dependencies...')
-    print_separator()
-
-def print_footer() -> None:
-    print_success('Project
+def print_separator() -> None:
