@@ -1,7 +1,9 @@
 import os
+import pytest
+from unittest.mock import patch, call
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from unittest.mock import patch, call
+from typing import Any, Dict
 
 import pytest
 
@@ -39,14 +41,14 @@ def test_update_file_creates_binary_file(mock_os, mock_open):
 
 
 @pytest.mark.parametrize(
-    ("source", "expected_encoded"),
+    ("source, expected_encoded"),
     [
         ("file.txt", b"file.txt"),
         ("foo.txt - 無為", b"foo.txt - \xe7\x84\xa1\xe7\x82\xba"),
         (b"\xff\xff\xff", b"\xff\xff\xff"),
     ],
 )
-def test_update_file_with_encoded_content(source, expected_encoded):
+def test_update_file_with_encoded_content(source: str, expected_encoded: bytes):
     # Can't use NamedTemporaryFile this as a context manager because Windows
     # doesn't allow O_TEMPORARY files (with delete=True) to be opened
     # twice, defeating the purpose.
@@ -59,14 +61,14 @@ def test_update_file_with_encoded_content(source, expected_encoded):
 
 
 @pytest.mark.parametrize(
-    ("encoded", "expected"),
+    ("encoded, expected"),
     [
         (b"file.txt", "file.txt"),
         (b"foo.txt - \xe7\x84\xa1\xe7\x82\xba", "foo.txt - 無為"),
         (b"\xff\xff\xff", b"\xff\xff\xff"),
     ],
 )
-def test_get_file_contents(encoded, expected):
+def test_get_file_contents(encoded: bytes, expected: str):
     file = NamedTemporaryFile(delete=False)
     file.write(encoded)
     file.flush()
@@ -104,7 +106,7 @@ def test_get_directory_contents_mocked(mock_IgnoreMatcher, mock_os, mock_open):
 
     mock_walk = mock_os.walk
     mock_walk.return_value = [
-        (np("/fake/root"), ["foo", "to-ignore", "bar"], ["file.txt", "to-ignore.txt"]),
+        (np("/fake/root"), ["foo", "to-ignore", "bar"], ["bar.txt", "to-ignore.txt"]),
         (np("/fake/root/foo"), [], ["foo.txt"]),
         (np("/fake/root/bar"), [], ["bar.txt"]),
     ]
@@ -119,5 +121,4 @@ def test_get_directory_contents_mocked(mock_IgnoreMatcher, mock_os, mock_open):
     assert data == [
         {
             "content": "file.txt",
-            "full_path": np("/fake/root/file.txt"),
-            'lines_of
+            "full_path
