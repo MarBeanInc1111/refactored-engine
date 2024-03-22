@@ -2,22 +2,39 @@
 
 // Import necessary modules
 const express = require('express');
-const csrf = require('csurf');
+const csurf = require('csurf');
+const cookieParser = require('cookie-parser');
 
 // Initialize express app
 const app = express();
 
+// Configure view engine
+app.set('view engine', 'ejs');
+
 // CSRF protection setup
-const csrfProtection = csrf({ cookie: false });
+const csrfProtection = csurf({ cookie: true });
+app.use(cookieParser());
 app.use(csrfProtection);
 
 // Middleware to make CSRF token available in res.locals
 app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken();
+  res.locals.title = 'My App';
   next();
 });
 
-// Other middleware and routes will be added here
+// Routes
+app.get('/', (req, res) => {
+  res.render('index', { title: 'Home' });
+});
+
+app.get('/contact', csrfProtection, (req, res) => {
+  res.render('contact', { title: 'Contact', csrfToken: req.csrfToken() });
+});
+
+app.post('/contact', csrfProtection, (req, res) => {
+  res.send('Thank you for your message!');
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
