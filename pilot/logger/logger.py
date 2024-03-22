@@ -35,10 +35,8 @@ def setup_logger():
 
     return logger
 
-
 # Define a list of sensitive fields that should be filtered from the log
-sensitive_fields = ['--api-key', 'password']
-
+SENSITIVE_FIELDS = ['--api-key', 'password']
 
 def filter_sensitive_fields(record):
     # Replace sensitive fields in the log record with '*****'
@@ -52,20 +50,20 @@ def filter_sensitive_fields(record):
         local_vars = log_frame.f_locals
 
         # Check if the log message or arguments contain sensitive fields
-        if 'msg' in local_vars and any(field in local_vars['msg'] for field in sensitive_fields):
-            record.msg = re.sub(r'\b(' + '|'.join(sensitive_fields) + r')\b', '*****', local_vars['msg'])
+        if 'msg' in local_vars and any(field in local_vars['msg'] for field in SENSITIVE_FIELDS):
+            record.msg = re.sub(r'\b(' + '|'.join(SENSITIVE_FIELDS) + r')\b', '*****', local_vars['msg'])
 
-        if 'args' in local_vars and isinstance(local_vars['args'], dict) and any(field in local_vars['args'] for field in sensitive_fields):
+        if 'args' in local_vars and isinstance(local_vars['args'], dict) and any(field in local_vars['args'] for field in SENSITIVE_FIELDS):
             args = local_vars['args'].copy()
-            for field in sensitive_fields:
+            for field in SENSITIVE_FIELDS:
                 if field in args:
                     args[field] = '*****'
             record.args = args
 
-        elif 'args' in local_vars and isinstance(local_vars['args'], tuple) and any(arg in sensitive_fields for arg in local_vars['args']):
+        elif 'args' in local_vars and isinstance(local_vars['args'], tuple) and any(arg in SENSITIVE_FIELDS for arg in local_vars['args']):
             args_list = list(local_vars['args'])
             # Convert the tuple to a list and replace sensitive fields
-            args_list = ['*****' if arg in sensitive_fields else arg for arg in args_list]
+            args_list = ['*****' if arg in SENSITIVE_FIELDS else arg for arg in args_list]
             record.args = tuple(args_list)
 
     # Remove ANSI escape sequences from the log message
@@ -75,9 +73,8 @@ def filter_sensitive_fields(record):
 
     return True
 
-
 # Create a logger instance
 logger = setup_logger()
 
 # Example usage
-logger.debug("This is a debug message with --api-key in it", extra={'--api
+logger.debug("This is a debug message with --api-key in it", extra={'--api-key': 'secret-key'})
