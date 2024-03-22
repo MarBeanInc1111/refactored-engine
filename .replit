@@ -1,15 +1,4 @@
-modules = ["python-3.10:v18-20230807-322e88b"]
-run = "python3 pilot/main.py"
-
-[nix]
-channel = "stable-23_05"
-
-[unitTest]
-language = "python3"
-
-[gitHubImport]
-requiredFiles = [".replit", "replit.nix"]
-
-[deployment]
-run = ["sh", "-c", "python3 pilot/main.py"]
-deploymentTarget = "cloudrun"
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    python310.url = "github:NixOS/nixpkgs/nixpkgs-unstable#python-3.1
