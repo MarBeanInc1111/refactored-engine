@@ -1,54 +1,45 @@
-[
-  {
-    "type": "save_file",
-    "save_file": {
-      "name": "instructions_parser.py",
-      "path": "/instructions_parser.py",
-      "code_change_description": ""
-    }
-  },
-  {
-    "type": "command",
-    "command": {
-      "command": "chmod +x instructions_parser.py",
-      "timeout": "5000",
-      "success_message": "Successfully changed permissions",
-      "command_id": "make_instructions_parser_executable"
-    }
-  },
-  {
-    "type": "command",
-    "command": {
-      "command": "./instructions_parser.py",
-      "timeout": "30000",
-      "success_message": "Parsed instructions successfully",
-      "command_id": "parse_instructions"
-    }
-  },
-  {
-    "type": "save_file",
-    "save_file": {
-      "name": "actions.json",
-      "path": "/actions.json",
-      "code_change_description": ""
-    }
-  },
-  {
-    "type": "command",
-    "command": {
-      "command": "python3 -m json.tool actions.json > actions_formatted.json",
-      "timeout": "5000",
-      "success_message": "Formatted actions.json successfully",
-      "command_id": "format_actions_json"
-    }
-  },
-  {
-    "type": "command",
-    "command": {
-      "command": "cat actions_formatted.json",
-      "timeout": "5000",
-      "success_message": "Displayed formatted actions.json",
-      "command_id": "display_formatted_actions"
-    }
-  }
-]
+# Save the instructions_parser.py file
+- type: save_file
+  save_file:
+    name: instructions_parser.py
+    path: /instructions_parser.py
+    code_change_description: ''
+
+# Make the instructions_parser.py file executable
+- type: command
+  command:
+    command: chmod +x instructions_parser.py
+    timeout: 5000
+    success_message: 'Successfully changed permissions'
+    command_id: make_instructions_parser_executable
+
+# Execute the instructions_parser.py file
+- type: command
+  command:
+    command: ./instructions_parser.py
+    timeout: 30000
+    success_message: 'Parsed instructions successfully'
+    command_id: parse_instructions
+
+# Save the actions.json file
+- type: save_file
+  save_file:
+    name: actions.json
+    path: /actions.json
+    code_change_description: ''
+
+# Format the actions.json file using json.tool module
+- type: command
+  command:
+    command: python3 -m json.tool actions.json > actions_formatted.json
+    timeout: 5000
+    success_message: 'Formatted actions.json successfully'
+    command_id: format_actions_json
+
+# Display the formatted actions.json file
+- type: command
+  command:
+    command: cat actions_formatted.json
+    timeout: 5000
+    success_message: 'Displayed formatted actions.json'
+    command_id: display_formatted_actions
