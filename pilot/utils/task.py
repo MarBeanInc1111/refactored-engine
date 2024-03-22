@@ -2,7 +2,7 @@ import json
 import uuid
 from typing import Any, Dict, List, Optional
 
-from utils.telemetry import telemetry
+from utils.telemetry import telemetry, trace_code_event, LOOP_THRESHOLD  # added LOOP_THRESHOLD
 
 class Task:
     """
@@ -164,4 +164,4 @@ class Task:
             if self.ping_extension and not force:
                 print(json.dumps({
                     'pathId': telemetry.telemetry_id,
-                    'data': full_data
+                   
