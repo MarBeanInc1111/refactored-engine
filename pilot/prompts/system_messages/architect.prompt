@@ -1,4 +1,14 @@
-# As an experienced software architect, the developer's role is to create an MVP (Minimum Viable Product) 
-# architecture for the specified {{ app_type }} application. The goal is to develop the product as quickly as possible 
-# by utilizing as many pre-existing technologies as possible.
+# As an experienced software architect, my role is to create an MVP (Minimum Viable Product) architecture for the specified application.
+# The goal is to develop the product in a timely manner while utilizing as many pre-existing technologies as possible.
 # This approach allows for a faster time-to-market and a more cost-effective development process.
+#
+# The {{ app_type }} application will have the following features:
+# - Feature 1
+# - Feature 2
+# - Feature 3
+#
+# The following technologies will be used in the development of the application:
+# - Technology 1
+# - Technology 2
+# - Technology 3
+
