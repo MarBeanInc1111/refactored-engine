@@ -1,3 +1,4 @@
+from typing import Dict
 from utils.utils import step_already_finished, should_execute_step, generate_app_data
 from database.database import save_progress, save_feature
 from logger.logger import logger
@@ -6,26 +7,26 @@ from templates import apply_project_template
 from utils.exit import trace_code_event
 
 class TechLead:
-    DEVELOPMENT_PLANNING_STEP = 'development_planning'
+    development_planning_step: str = 'development_planning'
 
     def __init__(self, project):
         self.project = project
         self.convo = AgentConvo(self)
         self.save_dev_steps = False
 
-    def create_development_plan(self):
+    def create_development_plan(self) -> Dict:
         """Create a development plan for the project."""
-        self.project.current_step = self.DEVELOPMENT_PLANNING_STEP
+        self.project.current_step = self.development_planning_step
 
-        step = get_progress_steps(self.project.args['app_id'], self.DEVELOPMENT_PLANNING_STEP)
-        if step and not should_execute_step(self.project.args['step'], self.DEVELOPMENT_PLANNING_STEP):
+        step = get_progress_steps(self.project.args['app_id'], self.development_planning_step)
+        if step and not should_execute_step(self.project.args['step'], self.development_planning_step):
             step_already_finished(self.project.args, step)
             self.project.development_plan = step['development_plan']
-            return
+            return self.project.development_plan
 
         existing_summary = apply_project_template(self.project)
 
-        print(color_green_bold("Starting to create the action plan for development...\n"), category='agent:tech-lead')
+        print(f"{color_green_bold('Starting to create the action plan for development...\n')}", category='agent:tech-lead')
         logger.info("Starting to create the action plan for development...")
 
         try:
@@ -34,12 +35,13 @@ class TechLead:
             logger.error(f"Error creating development plan: {e}")
             trace_code_event()
             raise
+        finally:
+            save_progress(self.project.args['app_id'], self.project.current_step, {
+                "development_plan": self.project.development_plan, "app_data": generate_app_data(self.project.args)
+            })
 
         logger.info('Plan for development is created.')
-
-        save_progress(self.project.args['app_id'], self.project.current_step, {
-            "development_plan": self.project.development_plan, "app_data": generate_app_data(self.project.args)
-        })
+        return self.project.development_plan
 
     def create_feature_plan(self, feature_description):
         """Create a plan for developing a new feature."""
@@ -51,6 +53,10 @@ class TechLead:
             logger.error(f"Error creating feature plan: {e}")
             trace_code_event()
             raise
+        finally:
+            save_progress(self.project.args['app_id'], self.project.current_step, {
+                "development_plan": self.project.development_plan, "app_data": generate_app_data(self.project.args)
+            })
 
         logger.info('Plan for feature development is created.')
 
@@ -64,16 +70,16 @@ class TechLead:
             logger.error(f"Error creating feature summary: {e}")
             trace_code_event()
             raise
+        finally:
+            if not self.project.skip_steps:
+                save_feature(self.project.args['app_id'],
+                             self.project.feature_summary,
+                             self.convo.messages,
+                             self.project.checkpoints['last_development_step']['id'])
 
-        if not self.project.skip_steps:
-            save_feature(self.project.args['app_id'],
-                         self.project.feature_summary,
-                         self.convo.messages,
-                         self.project.checkpoints['last_development_step']['id'])
+            logger.info('Summary for new feature is created.')
 
-        logger.info('Summary for new feature is created.')
-
-    def get_plan_prompt_args(self):
+    def get_plan_prompt_args(self) -> Dict:
         """Return arguments for the development plan prompt."""
         return {
             "name": self.project.args['name'],
@@ -90,20 +96,15 @@ class TechLead:
 
     def get_feature_plan_prompt_args(self, feature_description):
         """Return arguments for the feature plan prompt."""
-        return {
-            **self.get_plan_prompt_args(),
+        prompt_args = self.get_plan_prompt_args()
+        prompt_args.update({
             "directory_tree": self.project.get_directory_tree(True),
             "previous_features": self.project.previous_features,
             "feature_description": feature_description,
             "task_type": 'feature',
-        }
+        })
+        return prompt_args
 
     def get_feature_summary_prompt_args(self, feature_description):
         """Return arguments for the feature summary prompt."""
         return {
-            "name": self.project.args['name'],
-            "app_type": self.project.args['app_type'],
-            "app_summary": self.project.project_description,
-            "feature_description": feature_description,
-            "development_tasks": self.project.development_plan,
-        }
