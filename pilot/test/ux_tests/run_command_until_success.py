@@ -1,10 +1,11 @@
 import os
+import time
 from helpers.agents import Developer, ENVIRONMENT_SETUP_STEP
 from helpers import AgentConvo, Project
 from helpers.files import update_file
 from database import save_app
 
-def run_command_until_success():
+def run_command_until_success(command, max_retries=5, delay=1):
     # Function to set up and run a command until success
 
     # Assign a name for the project
@@ -12,12 +13,12 @@ def run_command_until_success():
 
     # Initialize Project instance with given parameters
     project = Project(
-        app_id="84c2c532-e07c-4694-bcb0-70767c348b07",
+        app_id="<APP_ID>",
         name=name,
         app_type="",
-        user_id="97510ce7-dbca-44b6-973c-d27346ce4009",
-        email="7ed2f578-c791-4719-959c-dedf94394ad3",
-        password="secret",
+        user_id="<USER_ID>",
+        email="<EMAIL>",
+        password="<PASSWORD>",
         architecture=[],
         user_stories=[]
     )
@@ -31,7 +32,11 @@ def run_command_until_success():
     project.current_step = ENVIRONMENT_SETUP_STEP
 
     # Save the app
-    project.app = save_app(project)
+    try:
+        project.app = save_app(project)
+    except Exception as e:
+        print(f"Error saving app: {e}")
+        return
 
     # Update package.json
     package_json_path = os.path.join(project_root_path, "package.json")
@@ -45,5 +50,4 @@ def run_command_until_success():
     # Initialize Developer instance
     developer = Developer(project)
 
-    # Set run_command for the developer
-    developer.run_command = "npm install"
+    # Set run_
